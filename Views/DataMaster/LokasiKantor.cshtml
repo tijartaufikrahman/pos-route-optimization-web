@@ -1,0 +1,225 @@
+@{
+    ViewData["Title"] = "Master Lokasi Kantor";
+}
+
+<main>
+
+
+    <div id="alertNoData" class="alert alert-warning" style="display: none;">
+        <i class="bi bi-info-circle-fill"></i>
+        <div><strong>Data Belum Ada:</strong> Silakan klik langsung pada peta atau cari lokasi melalui kotak di bawah untuk menentukan titik kantor.</div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingContainer" class="card">
+        <div class="card-body p-5 text-center">
+            <div class="d-flex justify-content-center align-items-center flex-column gap-3 py-3">
+                <div class="spinner-border spinner-pos" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div>
+                    <div style="font-size:0.88rem; font-weight:600; color: var(--pos-text);">Memeriksa data lokasi kantor...</div>
+                    <div class="text-muted" style="font-size:0.78rem;">Sistem sedang memuat konfigurasi koordinat geografis.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="mainContainer" class="card" style="display: none;">
+        <div class="card-header">
+            <h5 class="card-title-section">Detail &amp; Titik Lokasi Kantor</h5>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" id="btnHapusKantor" class="btn btn-danger btn-sm" style="display:none;">
+                    <i class="bi bi-trash"></i> Hapus Lokasi
+                </button>
+                <span id="statusBadge" class="badge badge-secondary">Mengecek...</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <form id="formPengaturanKantor">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <label class="filter-label">Cari Lokasi / Klik Peta <span class="text-danger">*</span></label>
+                        <div class="input-group mb-3">
+                            <input type="text" id="inputSearchMap" class="form-control form-control-pos" placeholder="Ketik nama lokasi lalu tekan Enter...">
+                            <button class="btn btn-pos" type="button" id="btnSearchMap"><i class="bi bi-search"></i> Cari</button>
+                        </div>
+                        <div id="map"></div>
+                    </div>
+                    <div class="col-lg-5">
+                        <input type="hidden" id="kantorId">
+                        <div class="mb-3">
+                            <label class="label-pos">Nama Kantor <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-pos" id="namaKantor" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="label-pos">Kode Pos <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-pos" id="kodePos" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="label-pos">Alamat Lengkap <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-pos" id="alamat" rows="4" required></textarea>
+                        </div>
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <label class="label-pos">Latitude</label>
+                                <input type="text" class="form-control form-control-pos" id="latitude" readonly required style="background: var(--pos-bg);">
+                            </div>
+                            <div class="col-6">
+                                <label class="label-pos">Longitude</label>
+                                <input type="text" class="form-control form-control-pos" id="longitude" readonly required style="background: var(--pos-bg);">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-pos w-100" id="btnSimpan">
+                            <i class="bi bi-save me-1"></i> Simpan Lokasi Kantor
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqkyOYHvgAZt-mpcn3V_14KoSJJ3Hr4MM&libraries=places"></script>
+
+    <script>
+        const API_KANTOR_DELETE = API_BASE_URL + "/api/lokasi-kantor/setting";
+        $(document).ready(function () {
+            const API_KANTOR = API_BASE_URL + "/api/lokasi-kantor/setting";
+            const globalUserId = parseInt("@ViewBag.UserId") || 0;
+            const globalToken = "@ViewBag.Token".startsWith("Bearer ") ? "@ViewBag.Token" : "Bearer @ViewBag.Token";
+
+            let map, marker, geocoder;
+            const defaultLat = -6.2088;
+            const defaultLng = 106.8456;
+
+            function initMap(lat, lng, zoom = 16) {
+                if (map) return;
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat, lng },
+                    zoom,
+                    mapTypeControl: false,
+                    streetViewControl: false
+                });
+                geocoder = new google.maps.Geocoder();
+                map.addListener('click', function (e) {
+                    updateMarker(e.latLng.lat(), e.latLng.lng());
+                });
+            }
+
+            function updateMarker(lat, lng) {
+                const myLatLng = { lat, lng };
+                if (marker) {
+                    marker.setPosition(myLatLng);
+                } else {
+                    marker = new google.maps.Marker({
+                        position: myLatLng, map, draggable: true,
+                        animation: google.maps.Animation.DROP
+                    });
+                    marker.addListener('dragend', function () {
+                        const pos = marker.getPosition();
+                        fillLatLng(pos.lat(), pos.lng());
+                    });
+                }
+                map.panTo(myLatLng);
+                fillLatLng(lat, lng);
+            }
+
+            function fillLatLng(lat, lng) {
+                $('#latitude').val(lat.toFixed(10));
+                $('#longitude').val(lng.toFixed(10));
+            }
+
+            function searchLocation() {
+                let query = $('#inputSearchMap').val();
+                if (!query) return;
+                let btn = $('#btnSearchMap');
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+                geocoder.geocode({ 'address': query }, function (results, status) {
+                    btn.prop('disabled', false).html('<i class="bi bi-search"></i> Cari');
+                    if (status === 'OK') {
+                        const lat = results[0].geometry.location.lat();
+                        const lng = results[0].geometry.location.lng();
+                        map.setZoom(17);
+                        updateMarker(lat, lng);
+                    } else {
+                        alert("Lokasi tidak ditemukan. Coba gunakan kata kunci yang lebih spesifik.");
+                    }
+                });
+            }
+
+            $('#btnSearchMap').click(searchLocation);
+            $('#inputSearchMap').on('keypress', function (e) {
+                if (e.which === 13) { e.preventDefault(); searchLocation(); }
+            });
+
+            $.ajax({
+                url: API_KANTOR, type: 'GET',
+                headers: { "Authorization": globalToken },
+                success: function (data) {
+                    $('#loadingContainer').hide();
+                    $('#mainContainer').show();
+                    $('#kantorId').val(data.id);
+                    $('#namaKantor').val(data.nama);
+                    $('#kodePos').val(data.kodePos);
+                    $('#alamat').val(data.alamat);
+                    $('#statusBadge').removeClass('badge-secondary').addClass('badge-green').text('Lokasi Aktif');
+                    $('#btnHapusKantor').show();
+                    initMap(data.latitude, data.longitude);
+                    updateMarker(data.latitude, data.longitude);
+                },
+                error: function (xhr) {
+                    $('#loadingContainer').hide();
+                    $('#mainContainer').show();
+                    if (xhr.status === 404) {
+                        $('#alertNoData').fadeIn();
+                        $('#statusBadge').text('Belum Diatur');
+                        initMap(defaultLat, defaultLng, 10);
+                    }
+                }
+            });
+
+            $('#formPengaturanKantor').submit(function (e) {
+                e.preventDefault();
+                let btn = $('#btnSimpan');
+                btn.prop('disabled', true).text('Menyimpan...');
+                let payload = {
+                    userId: globalUserId,
+                    namaKantor: $('#namaKantor').val(),
+                    kodePos: $('#kodePos').val(),
+                    alamat: $('#alamat').val(),
+                    latitude: $('#latitude').val(),
+                    longitude: $('#longitude').val()
+                };
+                $.ajax({
+                    url: API_KANTOR, type: 'POST',
+                    contentType: 'application/json',
+                    headers: { "Authorization": globalToken },
+                    data: JSON.stringify(payload),
+                    success: function () { alert("Lokasi kantor berhasil disimpan!"); location.reload(); },
+                    error: function (xhr) {
+                        alert("Gagal simpan: " + (xhr.responseJSON?.message || "Terjadi kesalahan"));
+                        btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i> Simpan Lokasi Kantor');
+                    }
+                });
+            });
+
+            $('#btnHapusKantor').click(function () {
+                if (!confirm('Yakin ingin menghapus lokasi kantor?')) return;
+                let btn = $(this);
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Menghapus...');
+                $.ajax({
+                    url: API_KANTOR_DELETE, type: 'DELETE',
+                    headers: { "Authorization": globalToken },
+                    success: function (res) { alert(res.message || 'Lokasi kantor berhasil dihapus'); location.reload(); },
+                    error: function (xhr) {
+                        alert(xhr.responseJSON?.message || 'Gagal menghapus lokasi kantor');
+                        btn.prop('disabled', false).html('Hapus Lokasi');
+                    }
+                });
+            });
+        });
+    </script>
+}

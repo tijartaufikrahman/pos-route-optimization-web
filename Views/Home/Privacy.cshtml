@@ -1,0 +1,90 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<main>
+    
+
+    <!-- Feature Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card h-100">
+                <div class="card-body p-3 text-center">
+                    <div class="stat-icon blue mx-auto mb-2" style="width:46px;height:46px;border-radius:12px;font-size:1.2rem;">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <div class="mb-1" style="font-size:0.82rem; font-weight:600; color: var(--pos-blue);">Data Kiriman</div>
+                    <div class="text-muted" style="font-size:0.72rem; line-height:1.5;">Kelola data paket &amp; dokumen pengantaran</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100">
+                <div class="card-body p-3 text-center">
+                    <div class="stat-icon orange mx-auto mb-2" style="width:46px;height:46px;border-radius:12px;font-size:1.2rem;">
+                        <i class="bi bi-clipboard-check-fill"></i>
+                    </div>
+                    <div class="mb-1" style="font-size:0.82rem; font-weight:600; color: var(--pos-orange);">Penugasan</div>
+                    <div class="text-muted" style="font-size:0.72rem; line-height:1.5;">Kelola penugasan kepada petugas antaran</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100">
+                <div class="card-body p-3 text-center">
+                    <div class="stat-icon green mx-auto mb-2" style="width:46px;height:46px;border-radius:12px;font-size:1.2rem;">
+                        <i class="bi bi-diagram-3-fill"></i>
+                    </div>
+                    <div class="mb-1" style="font-size:0.82rem; font-weight:600; color: var(--pos-green);">Optimasi Rute</div>
+                    <div class="text-muted" style="font-size:0.72rem; line-height:1.5;">Rute optimal beserta jarak &amp; estimasi waktu</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100">
+                <div class="card-body p-3 text-center">
+                    <div class="stat-icon cyan mx-auto mb-2" style="width:46px;height:46px;border-radius:12px;font-size:1.2rem;">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <div class="mb-1" style="font-size:0.82rem; font-weight:600; color: var(--pos-cyan);">Peta Digital</div>
+                    <div class="text-muted" style="font-size:0.72rem; line-height:1.5;">Visualisasi lokasi &amp; rute pengantaran</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Row -->
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title-section">Tentang Sistem</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3" style="font-size:0.82rem; line-height:1.85; color: var(--pos-text-body);">
+                        Sistem optimasi rute pengantaran merupakan sistem yang dirancang untuk membantu proses distribusi kiriman agar lebih efektif dan efisien. Sistem ini memanfaatkan algoritma <strong>Ant Colony Optimization (ACO)</strong> dan <strong>2-Opt</strong> untuk menghasilkan rute pengantaran optimal berdasarkan titik lokasi tujuan.
+                    </p>
+                    <p class="mb-0" style="font-size:0.82rem; line-height:1.85; color: var(--pos-text-body);">
+                        Selain rute optimal, sistem juga menyediakan informasi jarak tempuh dan estimasi waktu perjalanan agar proses pengantaran lebih terstruktur dan efisien.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title-section">Informasi Sistem</h5>
+                </div>
+                <div class="card-body p-0">
+                    <dl class="system-list px-3 py-2">
+                        <div class="system-item"><dt>Algoritma</dt><dd>ACO &amp; 2-Opt</dd></div>
+                        <div class="system-item"><dt>Lokasi</dt><dd>KC Malangbong 44188</dd></div>
+                        <div class="system-item"><dt>Platform</dt><dd>Web &amp; Mobile</dd></div>
+                        <div class="system-item"><dt>Versi</dt><dd>v1.0.0</dd></div>
+                        <div class="system-item"><dt>Status</dt><dd><span class="badge badge-green">Aktif</span></dd></div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>

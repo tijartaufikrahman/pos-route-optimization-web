@@ -1,0 +1,692 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    /* Clean Dashboard Filter Bar */
+    .dashboard-header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 1.25rem;
+    }
+
+    .active-date-display-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .active-date-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(27, 44, 89, 0.08);
+        color: #1B2C59;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .active-date-text {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #1B2C59;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+    }
+
+    .date-select-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 6px 12px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .date-select-pill:focus-within {
+        border-color: #1B2C59;
+        box-shadow: 0 0 0 3px rgba(27, 44, 89, 0.08);
+    }
+
+    .date-select-pill i {
+        color: #F26522;
+        font-size: 0.95rem;
+    }
+
+    .date-pill-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #64748b;
+        user-select: none;
+    }
+
+    .date-pill-input {
+        border: none;
+        background: transparent;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1e293b;
+        outline: none;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .date-pill-input:focus {
+        color: #1B2C59;
+    }
+
+    /* Metric Stat Cards */
+    .metric-card-pro {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.25rem 1.35rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        height: 100%;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .metric-card-pro:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.08);
+        border-color: #cbd5e1;
+    }
+
+    .metric-meta {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metric-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .metric-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+    }
+
+    .metric-sub {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 5px;
+    }
+
+    .metric-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .icon-box-navy {
+        background: rgba(27, 44, 89, 0.08);
+        color: #1B2C59;
+    }
+
+    .icon-box-orange {
+        background: rgba(242, 101, 34, 0.1);
+        color: #F26522;
+    }
+
+    .icon-box-blue {
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+
+    .icon-box-green {
+        background: rgba(22, 163, 74, 0.1);
+        color: #16a34a;
+    }
+
+    /* Section Cards */
+    .pro-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .pro-card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .pro-card-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1B2C59;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pro-card-title i {
+        color: #F26522;
+        font-size: 1rem;
+    }
+
+    .pro-card-body {
+        padding: 1.25rem;
+    }
+
+    /* Table within Card */
+    .table-pro thead th {
+        background: #f8fafc !important;
+        color: #475569 !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.05em !important;
+        text-transform: uppercase !important;
+        padding: 10px 14px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        white-space: nowrap !important;
+    }
+
+    .table-pro tbody td {
+        padding: 11px 14px !important;
+        font-size: 0.825rem !important;
+        vertical-align: middle !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        color: #334155;
+    }
+
+    .table-pro tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .badge-code {
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #f1f5f9;
+        color: #1e293b;
+        padding: 3px 7px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-action-pro {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        color: #1B2C59;
+        border: 1px solid #e2e8f0;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+
+    .btn-action-pro:hover {
+        background: #1B2C59;
+        color: #ffffff;
+        border-color: #1B2C59;
+    }
+
+    /* Distribution Progress Card */
+    .dist-progress-wrap {
+        height: 10px;
+        background-color: #f1f5f9;
+        border-radius: 6px;
+        overflow: hidden;
+        display: flex;
+        margin-bottom: 1.15rem;
+    }
+
+    .dist-bar-item {
+        height: 100%;
+        transition: width 0.4s ease;
+    }
+
+    .dist-legend-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 0.81rem;
+    }
+
+    .dist-legend-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .dist-legend-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #475569;
+    }
+
+    .dist-legend-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .dist-legend-val {
+        font-weight: 700;
+        color: #1e293b;
+    }
+</style>
+
+<main>
+    <!-- 1. Header Controls Row (Date Text on Left, Input on Right) -->
+    <div class="dashboard-header-bar">
+        <div class="active-date-display-box">
+            <div class="active-date-icon">
+                <i class="bi bi-calendar-event"></i>
+            </div>
+            <span class="active-date-text" id="activeDateDisplay">Memuat tanggal...</span>
+        </div>
+        <div>
+            <div class="date-select-pill">
+                <i class="bi bi-calendar3"></i>
+                <span class="date-pill-label">Tanggal:</span>
+                <input type="date" id="filterTanggal" class="date-pill-input" title="Pilih Tanggal Operasional">
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. KPI Operational Stat Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Total Kiriman -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card-pro">
+                <div class="metric-meta">
+                    <span class="metric-label">Total Kiriman</span>
+                    <span class="metric-value" id="statTotalKiriman">-</span>
+                    <span class="metric-sub" id="statPeriodSubtitle">Kiriman pada tanggal ini</span>
+                </div>
+                <div class="metric-icon-box icon-box-navy">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Siap Diantar -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card-pro">
+                <div class="metric-meta">
+                    <span class="metric-label">Siap Diantar</span>
+                    <span class="metric-value" id="statManifested">-</span>
+                    <span class="metric-sub">Menunggu penugasan pengantaran</span>
+                </div>
+                <div class="metric-icon-box icon-box-orange">
+                    <i class="bi bi-inbox"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sedang Diantar -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card-pro">
+                <div class="metric-meta">
+                    <span class="metric-label">Sedang Diantar</span>
+                    <span class="metric-value" id="statOnDelivery">-</span>
+                    <span class="metric-sub">Dalam perjalanan petugas</span>
+                </div>
+                <div class="metric-icon-box icon-box-blue">
+                    <i class="bi bi-truck"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selesai Terkirim -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card-pro">
+                <div class="metric-meta">
+                    <span class="metric-label">Selesai Terkirim</span>
+                    <span class="metric-value" id="statDelivered">-</span>
+                    <span class="metric-sub">Berhasil diterima pelanggan</span>
+                </div>
+                <div class="metric-icon-box icon-box-green">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Main Dashboard Grid (Col 8 / Col 4) -->
+    <div class="row g-4">
+        <!-- Left Column: Aktivitas Penugasan Terkini -->
+        <div class="col-12 col-lg-8">
+            <div class="pro-card">
+                <div class="pro-card-header">
+                    <h3 class="pro-card-title">
+                        <i class="bi bi-journal-text"></i>
+                        <span>Aktivitas Penugasan</span>
+                    </h3>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="/Penugasan/PenugasanPengantaran" class="btn btn-sm btn-outline-secondary" style="font-size: 0.78rem;">
+                            <span>Lihat Semua</span>
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="table-responsive p-0">
+                    <table class="table table-hover align-middle mb-0 table-pro" id="tablePenugasanTerkini">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width: 45px;">No</th>
+                                <th class="text-center">Kode Penugasan</th>
+                                <th>Petugas</th>
+                                <th class="text-center">Kiriman</th>
+                                <th class="text-center">Tanggal</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center" style="width: 70px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <span class="spinner-border spinner-border-sm me-2 text-primary"></span>
+                                    <span>Memuat aktivitas penugasan...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Status Distribusi -->
+        <div class="col-12 col-lg-4">
+            <!-- Progress Status Distribusi -->
+            <div class="pro-card">
+                <div class="pro-card-header">
+                    <h3 class="pro-card-title">
+                        <i class="bi bi-pie-chart-fill"></i>
+                        <span>Status Distribusi</span>
+                    </h3>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold" id="badgeDeliveryRate" style="font-size: 0.72rem;">
+                        0% Terkirim
+                    </span>
+                </div>
+                <div class="pro-card-body">
+                    <!-- Multi-bar progress -->
+                    <div class="dist-progress-wrap" title="Komposisi status kiriman">
+                        <div class="dist-bar-item bg-success" id="barDelivered" style="width: 0%;" title="Selesai Terkirim"></div>
+                        <div class="dist-bar-item bg-primary" id="barOnDelivery" style="width: 0%;" title="Sedang Diantar"></div>
+                        <div class="dist-bar-item" id="barManifested" style="width: 0%; background: #F26522;" title="Siap Diantar"></div>
+                    </div>
+
+                    <!-- Breakdown items -->
+                    <div class="dist-legend-item">
+                        <div class="dist-legend-label">
+                            <span class="dist-legend-dot bg-success"></span>
+                            <span>Selesai Terkirim</span>
+                        </div>
+                        <div class="dist-legend-val" id="distDeliveredCount">0 kiriman</div>
+                    </div>
+
+                    <div class="dist-legend-item">
+                        <div class="dist-legend-label">
+                            <span class="dist-legend-dot bg-primary"></span>
+                            <span>Sedang Diantar</span>
+                        </div>
+                        <div class="dist-legend-val" id="distOnDeliveryCount">0 kiriman</div>
+                    </div>
+
+                    <div class="dist-legend-item">
+                        <div class="dist-legend-label">
+                            <span class="dist-legend-dot" style="background: #F26522;"></span>
+                            <span>Siap Diantar</span>
+                        </div>
+                        <div class="dist-legend-val" id="distManifestedCount">0 kiriman</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Helper Format Tanggal Lokal YYYY-MM-DD
+            function getTodayDateStr() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            // Inisialisasi Tanggal Default: Hari Ini
+            const todayStr = getTodayDateStr();
+            $('#filterTanggal').val(todayStr);
+
+            // 1. Load Statistik Kiriman & Status Distribusi Berdasarkan Tanggal
+            function loadPackageStats(dateStr) {
+                let url = API_BASE_URL + '/api/paket/list-kiriman';
+                if (dateStr) {
+                    url += `?tanggalAwal=${dateStr}&tanggalAkhir=${dateStr}`;
+                }
+
+                return $.ajax({
+                    url: url,
+                    method: 'GET',
+                    success: function (res) {
+                        const list = (res && res.data) ? res.data : [];
+                        const total = list.length;
+                        let manifested = 0;
+                        let onDelivery = 0;
+                        let delivered = 0;
+
+                        list.forEach(p => {
+                            const s = (p.status || '').toLowerCase();
+                            if (s === 'delivered') {
+                                delivered++;
+                            } else if (s === 'on_delivery') {
+                                onDelivery++;
+                            } else {
+                                manifested++;
+                            }
+                        });
+
+                        // Render Stat Cards
+                        $('#statTotalKiriman').text(total.toLocaleString('id-ID'));
+                        $('#statManifested').text(manifested.toLocaleString('id-ID'));
+                        $('#statOnDelivery').text(onDelivery.toLocaleString('id-ID'));
+                        $('#statDelivered').text(delivered.toLocaleString('id-ID'));
+
+                        // Render Breakdown
+                        $('#distDeliveredCount').text(delivered + ' kiriman');
+                        $('#distOnDeliveryCount').text(onDelivery + ' kiriman');
+                        $('#distManifestedCount').text(manifested + ' kiriman');
+
+                        // Render Progress Bars & Rate
+                        if (total > 0) {
+                            const deliveredPct = Math.round((delivered / total) * 100);
+                            const onDeliveryPct = Math.round((onDelivery / total) * 100);
+                            const manifestedPct = 100 - deliveredPct - onDeliveryPct;
+
+                            $('#barDelivered').css('width', deliveredPct + '%');
+                            $('#barOnDelivery').css('width', onDeliveryPct + '%');
+                            $('#barManifested').css('width', Math.max(0, manifestedPct) + '%');
+                            $('#badgeDeliveryRate').text(deliveredPct + '% Terkirim');
+                        } else {
+                            $('#barDelivered').css('width', '0%');
+                            $('#barOnDelivery').css('width', '0%');
+                            $('#barManifested').css('width', '0%');
+                            $('#badgeDeliveryRate').text('0% Terkirim');
+                        }
+                    },
+                    error: function () {
+                        $('#statTotalKiriman').text('0');
+                        $('#statManifested').text('0');
+                        $('#statOnDelivery').text('0');
+                        $('#statDelivered').text('0');
+                        $('#distDeliveredCount').text('0 kiriman');
+                        $('#distOnDeliveryCount').text('0 kiriman');
+                        $('#distManifestedCount').text('0 kiriman');
+                        $('#badgeDeliveryRate').text('0% Terkirim');
+                    }
+                });
+            }
+
+            // 2. Load Aktivitas Penugasan Berdasarkan Tanggal
+            function loadRecentAssignments(dateStr) {
+                const $tbody = $('#tablePenugasanTerkini tbody');
+                let url = API_BASE_URL + '/api/manajemen-antaran/penugasan';
+                if (dateStr) {
+                    url += `?tglAwal=${dateStr}&tglAkhir=${dateStr}`;
+                } else {
+                    url += '?tglAwal=2020-01-01&tglAkhir=2030-12-31';
+                }
+
+                return $.ajax({
+                    url: url,
+                    method: 'GET',
+                    success: function (res) {
+                        const list = Array.isArray(res) ? res : [];
+                        $tbody.empty();
+
+                        if (!list.length) {
+                            const emptyMsg = dateStr ? 'Tidak ada aktivitas penugasan pada tanggal ini.' : 'Belum ada aktivitas penugasan yang tercatat.';
+                            $tbody.html(`
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="bi bi-calendar-x fs-3 d-block text-secondary mb-2"></i>
+                                        <span>${emptyMsg}</span>
+                                    </td>
+                                </tr>
+                            `);
+                            return;
+                        }
+
+                        // Ambil 5 penugasan terkini
+                        const latest = list.slice(0, 5);
+
+                        latest.forEach((item, index) => {
+                            const isSelesai = (item.status || '').toLowerCase() === 'selesai';
+                            const statusBadge = isSelesai
+                                ? `<span class="status-badge status-completed">Selesai</span>`
+                                : `<span class="status-badge status-delivery">Sedang Berjalan</span>`;
+
+                            let formattedTgl = '-';
+                            if (item.tanggal) {
+                                const d = new Date(item.tanggal);
+                                if (!isNaN(d.getTime())) {
+                                    formattedTgl = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                                }
+                            }
+
+                            $tbody.append(`
+                                <tr>
+                                    <td class="text-center text-muted fw-semibold">${index + 1}</td>
+                                    <td class="text-center"><span class="badge-code">${item.kodePenugasan || '-'}</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-secondary" style="width: 26px; height: 26px; font-size: 0.75rem;">
+                                                <i class="bi bi-person-fill"></i>
+                                            </div>
+                                            <span class="fw-semibold text-dark">${item.namaKurir || '-'}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-bold text-dark">${item.jumlahPaket || 0}</span>
+                                        <span class="text-muted small">kiriman</span>
+                                    </td>
+                                    <td class="text-center text-secondary">${formattedTgl}</td>
+                                    <td class="text-center">${statusBadge}</td>
+                                    <td class="text-center">
+                                        <a href="/Penugasan/DetailPenugasan/${item.id}" class="btn-action-pro" title="Lihat Detail Penugasan">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    },
+                    error: function () {
+                        $tbody.html(`
+                            <tr>
+                                <td colspan="7" class="text-center text-danger py-4">
+                                    <i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-1"></i>
+                                    <span>Gagal memuat data penugasan. Periksa koneksi API.</span>
+                                </td>
+                            </tr>
+                        `);
+                    }
+                });
+            }
+
+            // Helper Format Tanggal Indonesia Lengkap (Contoh: Rabu, 01 Januari 2020)
+            function formatIndonesianFullDate(dateStr) {
+                if (!dateStr) return "-";
+                try {
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        const year = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10) - 1;
+                        const day = parseInt(parts[2], 10);
+                        const d = new Date(year, month, day);
+
+                        if (!isNaN(d.getTime())) {
+                            const hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][d.getDay()];
+                            const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][d.getMonth()];
+                            const dayStr = String(day).padStart(2, '0');
+                            return `${hari}, ${dayStr} ${bulan} ${year}`;
+                        }
+                    }
+                } catch (e) {}
+                return dateStr;
+            }
+
+            // 3. Refresh Dashboard Data
+            function refreshDashboardData() {
+                const selectedDate = $('#filterTanggal').val() || todayStr;
+                $('#activeDateDisplay').text(formatIndonesianFullDate(selectedDate));
+                loadPackageStats(selectedDate);
+                loadRecentAssignments(selectedDate);
+            }
+
+            // 4. Event Listener Saat Tanggal Berubah -> Langsung Ambil Data spesifik tanggal
+            $('#filterTanggal').on('change', function () {
+                refreshDashboardData();
+            });
+
+            // 5. Inisialisasi Pertama: Hari Ini
+            refreshDashboardData();
+        });
+    </script>
+}

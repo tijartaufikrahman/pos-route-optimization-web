@@ -1,0 +1,211 @@
+@{
+    ViewData["Title"] = "Kelola Pengguna";
+}
+
+<main>
+
+
+    <!-- Data Table Card (SystemKnowledge dash-table-wrapper) -->
+    <div class="dash-table-wrapper">
+        <div class="dash-table-header">
+            <div>
+                <h3 class="mb-0">Data Pengguna</h3>
+            </div>
+            <div>
+                <button class="btn btn-pos d-inline-flex align-items-center gap-2 shadow-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalUser">
+                    <i class="bi bi-plus-lg"></i> Tambah Pengguna
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive p-0">
+            <table id="tableUser" class="table table-hover w-100 mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:55px;">No</th>
+                        <th>Nama Lengkap</th>
+                        <th style="width:160px;">Role</th>
+                        <th style="width:160px;">No. HP</th>
+                        <th style="width:110px;">Status</th>
+                        <th style="width:100px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL TAMBAH / EDIT PENGGUNA -->
+<div class="modal fade" id="modalUser" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title header-title" id="modalTitle">Tambah Pengguna Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formUser">
+                    <input type="hidden" id="userId">
+                    <div class="mb-3">
+                        <label class="label-pos">Nama Lengkap</label>
+                        <input type="text" class="form-control form-control-pos" id="nama" required>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-1">
+                            <label class="label-pos">Username</label>
+                            <input type="text" class="form-control form-control-pos" id="username" required>
+                        </div>
+                        <div class="col-md-6 mb-1">
+                            <label class="label-pos">Password</label>
+                            <input type="password" class="form-control form-control-pos" id="password">
+                            <small class="text-muted" id="passHint" style="font-size: 0.68rem; display:none;">Kosongkan jika tidak ganti</small>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-0">
+                        <div class="col-md-6 mb-1">
+                            <label class="label-pos">Pilih Role</label>
+                            <select class="form-control form-control-pos" id="roleId" required></select>
+                        </div>
+                        <div class="col-md-6 mb-1">
+                            <label class="label-pos">Status Akun</label>
+                            <select class="form-control form-control-pos" id="isActive">
+                                <option value="true">Aktif</option>
+                                <option value="false">Non-Aktif</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="label-pos">No. Handphone</label>
+                        <input type="tel" class="form-control form-control-pos" id="nomorTelepon">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline px-4" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" form="formUser" class="btn btn-pos px-4">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const API_USER = API_BASE_URL+"/api/users";
+    const API_ROLE = API_BASE_URL+"/api/roles";
+    let table;
+
+    $(document).ready(function () {
+        table = $('#tableUser').DataTable({
+            dom: '<"p-3 d-flex justify-content-between"lf>t<"p-3 d-flex justify-content-between"ip>',
+            columnDefs: [{ targets: [0, 4, 5], className: "text-center" }]
+        });
+
+        loadRoles();
+        loadUsers();
+
+        $('#formUser').on('submit', function (e) {
+            e.preventDefault();
+            saveUser();
+        });
+
+        $('#modalUser').on('hidden.bs.modal', function () { resetForm(); });
+    });
+
+    function loadRoles() {
+        $.get(API_ROLE, function (data) {
+            let options = '<option value="">-- Pilih Role --</option>';
+            data.forEach(r => { options += `<option value="${r.id}">${r.namaRole}</option>`; });
+            $('#roleId').html(options);
+        });
+    }
+
+    function loadUsers() {
+        $.get(API_USER, function (data) {
+            table.clear();
+            data.forEach((u, i) => {
+                const statusBadge = u.isActive
+                    ? '<span class="badge badge-green">Aktif</span>'
+                    : '<span class="badge badge-red">Non-Aktif</span>';
+
+                table.row.add([
+                    i + 1,
+                    `<span class="fw-medium" style="color: var(--pos-text);">${u.nama}</span>`,
+                    `<span class="badge badge-blue">${u.roleName}</span>`,
+                    `<span style="color: var(--pos-text-muted); font-size:0.8rem;">${u.nomorTelepon || '-'}</span>`,
+                    statusBadge,
+                    `<div class="d-flex justify-content-center gap-1">
+                        <button class="btn-action btn-edit" onclick="editUser(${u.id})" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn-action btn-delete" onclick="deleteUser(${u.id})" title="Hapus"><i class="bi bi-trash"></i></button>
+                    </div>`
+                ]);
+            });
+            table.draw();
+        });
+    }
+
+    function saveUser() {
+        const id = $('#userId').val();
+        const payload = {
+            Id: id ? parseInt(id) : 0,
+            Nama: $('#nama').val(),
+            Username: $('#username').val(),
+            Password: $('#password').val(),
+            NomorTelepon: $('#nomorTelepon').val(),
+            RoleId: parseInt($('#roleId').val()),
+            IsActive: $('#isActive').val() === "true"
+        };
+
+        const type = id ? 'PUT' : 'POST';
+        const url = id ? `${API_USER}/${id}` : API_USER;
+
+        $.ajax({
+            url, type,
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function () {
+                $('#modalUser').modal('hide');
+                $('.modal-backdrop').remove();
+                setTimeout(() => { alert("Data berhasil disimpan!"); loadUsers(); }, 200);
+            },
+            error: function (xhr) {
+                alert("Gagal: " + (xhr.responseJSON?.message || "Cek input."));
+            }
+        });
+    }
+
+    function editUser(id) {
+        $.get(`${API_USER}/${id}`, function (u) {
+            $('#userId').val(u.id);
+            $('#nama').val(u.nama);
+            $('#username').val(u.username);
+            $('#nomorTelepon').val(u.nomorTelepon);
+            $('#roleId').val(u.roleId);
+            $('#isActive').val(u.isActive.toString());
+            $('#password').val('');
+            $('#passHint').show();
+            $('#modalTitle').text("Edit Pengguna");
+            $('#modalUser').modal('show');
+        });
+    }
+
+    function deleteUser(id) {
+        if (confirm("Hapus pengguna ini secara permanen?")) {
+            $.ajax({
+                url: `${API_USER}/${id}`,
+                type: 'DELETE',
+                success: function () { loadUsers(); }
+            });
+        }
+    }
+
+    function resetForm() {
+        $('#userId').val('');
+        $('#formUser')[0].reset();
+        $('#passHint').hide();
+        $('#isActive').val("true");
+        $('#modalTitle').text("Tambah Pengguna Baru");
+    }
+</script>
+}

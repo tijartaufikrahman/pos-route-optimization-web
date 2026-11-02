@@ -1,0 +1,949 @@
+@{
+    ViewData["Title"] = "Detail Penugasan";
+    var penugasanId = ViewContext.RouteData.Values["id"] ?? "";
+}
+
+<style>
+    /* Card Styling */
+    .detail-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+
+    .detail-card-header {
+        padding: 0.95rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .detail-card-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1B2C59;
+        margin: 0;
+        letter-spacing: -0.01em;
+    }
+
+    /* Info Tiles */
+    .detail-info-tile {
+        padding: 0.85rem 1.1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        height: 100%;
+        transition: border-color 0.15s ease;
+    }
+
+    .detail-info-tile:hover {
+        border-color: #cbd5e1;
+    }
+
+    .info-tile-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 0.35rem;
+    }
+
+    .info-tile-value {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    /* Mini Stat Cards */
+    .stat-mini-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.9rem 1.1rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        height: 100%;
+    }
+
+    .stat-mini-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 0.3rem;
+    }
+
+    .stat-mini-val {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #1B2C59;
+        line-height: 1.2;
+    }
+
+    .stat-mini-unit {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #64748b;
+        margin-left: 2px;
+    }
+
+    /* Summary Status Items */
+    .summary-status-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.65rem 0.85rem;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+    }
+
+    .summary-status-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .summary-status-badge {
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .summary-status-completed {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+        color: #065f46;
+    }
+    .dot-completed { background: #10B981; }
+    .badge-completed { background: #d1fae5; color: #065f46; }
+
+    .summary-status-delivery {
+        background: #fffbeb;
+        border-color: #fde68a;
+        color: #92400e;
+    }
+    .dot-delivery { background: #F59E0B; }
+    .badge-delivery { background: #fef3c7; color: #92400e; }
+
+    .summary-status-returned {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #991b1b;
+    }
+    .dot-returned { background: #EF4444; }
+    .badge-returned { background: #fee2e2; color: #991b1b; }
+
+    .summary-status-pending {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        color: #475569;
+    }
+    .dot-pending { background: #94a3b8; }
+    .badge-pending { background: #e2e8f0; color: #334155; }
+
+    /* Tabs Styling */
+    .pengiriman-tabs {
+        padding: 0.75rem 1.25rem;
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .nav-tabs-minimal {
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 8px;
+        display: flex;
+        gap: 4px;
+        list-style: none;
+        margin: 0;
+    }
+
+    .nav-tabs-minimal .nav-item {
+        flex: 1;
+    }
+
+    .nav-tabs-minimal .nav-link {
+        width: 100%;
+        border: none;
+        border-radius: 6px;
+        padding: 7px 12px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #64748b;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+
+    .nav-tabs-minimal .nav-link:hover {
+        color: #1B2C59;
+        background: rgba(255, 255, 255, 0.6);
+    }
+
+    .nav-tabs-minimal .nav-link.active {
+        background: #ffffff !important;
+        color: #1B2C59 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    }
+
+    .nav-tabs-minimal .tab-count {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 20px;
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .nav-tabs-minimal .nav-link.active .tab-count {
+        background: #1B2C59;
+        color: #ffffff;
+    }
+
+    /* Table Styling */
+    #tableDetailKiriman thead th {
+        background-color: #f8fafc !important;
+        color: #475569 !important;
+        font-size: 0.76rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.04em !important;
+        text-transform: uppercase !important;
+        padding: 1rem 1.15rem !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        white-space: nowrap !important;
+    }
+
+    #tableDetailKiriman tbody td {
+        padding: 1rem 1.15rem !important;
+        font-size: 0.825rem !important;
+        vertical-align: middle !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        color: #334155;
+    }
+
+    #tableDetailKiriman tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    /* POD Action Button */
+    .btn-pod-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 6px;
+        background-color: rgba(27, 44, 89, 0.06);
+        color: #1B2C59;
+        border: 1px solid rgba(27, 44, 89, 0.15);
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .btn-pod-action:hover {
+        background-color: #1B2C59;
+        color: #ffffff;
+        border-color: #1B2C59;
+        transform: translateY(-1px);
+    }
+</style>
+
+<main>
+    <!-- Informasi Penugasan -->
+    <div class="detail-card mb-3">
+        <div class="detail-card-header">
+            <h3 class="detail-card-title">Informasi Penugasan</h3>
+            <div id="infoStatusContainer">
+                <span class="status-badge status-manifested">Memuat...</span>
+            </div>
+        </div>
+        <div class="p-3">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="detail-info-tile">
+                        <div class="info-tile-label">Kode Penugasan</div>
+                        <div class="info-tile-value font-monospace" id="infoKode">-</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="detail-info-tile">
+                        <div class="info-tile-label">Kurir</div>
+                        <div class="info-tile-value" id="infoKurir">-</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="detail-info-tile">
+                        <div class="info-tile-label">Tanggal Penugasan</div>
+                        <div class="info-tile-value" id="infoTanggal">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row g-3">
+        <!-- Tabel Kiriman (Kiri) -->
+        <div class="col-lg-9">
+            <div class="detail-card mb-0">
+                <div class="detail-card-header">
+                    <h3 class="detail-card-title">Data Kiriman</h3>
+                </div>
+
+                <!-- Tabs -->
+                <div class="pengiriman-tabs">
+                    <ul class="nav-tabs-minimal" id="filterTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active"
+                                    id="tab-all"
+                                    data-filter="all"
+                                    type="button"
+                                    aria-pressed="true">
+                                <i class="bi bi-box-seam"></i>
+                                <span>Semua</span> <span class="tab-count" id="cnt-all">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link"
+                                    id="tab-mid"
+                                    data-filter="mid"
+                                    type="button"
+                                    aria-pressed="false">
+                                <i class="bi bi-truck"></i>
+                                <span>Diantar</span> <span class="tab-count" id="cnt-mid">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link"
+                                    id="tab-end"
+                                    data-filter="end"
+                                    type="button"
+                                    aria-pressed="false">
+                                <i class="bi bi-check2-circle"></i>
+                                <span>Selesai</span> <span class="tab-count" id="cnt-end">0</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Table -->
+                <div class="p-0">
+                    <div class="table-responsive p-0">
+                        <table id="tableDetailKiriman" class="table table-hover align-middle mb-0 w-100">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 45px;">No</th>
+                                    <th class="text-center" style="width: 130px;">No. Kiriman</th>
+                                    <th class="text-center" style="width: 140px;">Nama Penerima</th>
+                                    <th class="text-center" style="width: 120px;">No. Telepon</th>
+                                    <th class="text-center">Alamat Penerima</th>
+                                    <th class="text-center" style="width: 110px;">Jenis Kiriman</th>
+                                    <th class="text-center" style="width: 110px;">Jenis Layanan</th>
+                                    <th class="text-center" style="width: 80px;">Berat (KG)</th>
+                                    <th class="text-center" style="width: 110px;">Status</th>
+                                    <th class="text-center kolom-pod" style="width: 110px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Ringkasan (Kanan) -->
+        <div class="col-lg-3">
+            <!-- Metrics Total Kiriman & Total Berat -->
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <div class="stat-mini-card">
+                        <div class="stat-mini-label">Total Kiriman</div>
+                        <div class="stat-mini-val" id="metricTotal">0</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-mini-card">
+                        <div class="stat-mini-label">Total Berat</div>
+                        <div class="stat-mini-val" id="metricBerat">0.0 <span class="stat-mini-unit">KG</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ringkasan Status -->
+            <div class="detail-card mb-3">
+                <div class="detail-card-header">
+                    <h3 class="detail-card-title">Ringkasan Status</h3>
+                </div>
+                <div class="p-3">
+                    <div class="d-flex flex-column gap-2" id="dynamicMetrics"></div>
+                </div>
+            </div>
+
+            <!-- Estimasi Pengantaran -->
+            <div class="detail-card" id="estimasiOptimasiCard">
+                <div class="detail-card-header">
+                    <h3 class="detail-card-title">Estimasi Pengantaran</h3>
+                </div>
+                <div class="p-3">
+                    <div id="estimasiBelumOptimasi">
+                        <div class="p-3 text-center rounded" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                            <i class="bi bi-info-circle text-muted d-block mb-1 fs-5"></i>
+                            <span class="text-muted small">Rute belum dioptimasi</span>
+                        </div>
+                    </div>
+                    <div id="estimasiSudahOptimasi" class="d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom" style="border-color: #f1f5f9 !important;">
+                            <span class="text-secondary small fw-medium">Total Jarak</span>
+                            <span class="text-dark fw-bold small" id="estimasiJarak">Memuat...</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-secondary small fw-medium">Estimasi Waktu</span>
+                            <span class="text-dark fw-bold small" id="estimasiWaktu">Memuat...</span>
+                        </div>
+                        <a class="btn btn-pos w-100 btn-sm py-2 fw-semibold" id="btnDetailOptimasi">
+                            <i class="bi bi-map me-1"></i> Detail Optimasi
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal Detail POD -->
+<div class="modal fade"
+     id="modalPod"
+     tabindex="-1"
+     aria-labelledby="modalPodLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow" style="border-radius: 10px; overflow: hidden;">
+            <!-- Header -->
+            <div class="modal-header px-4 py-3 border-bottom" style="background-color: #ffffff;">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark mb-0" id="modalPodLabel" style="color: #1B2C59 !important;">
+                        Proof Of Delivery (POD)
+                    </h5>
+                    <div class="text-muted small">Detail Bukti Pengantaran Kiriman</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <!-- Informasi POD -->
+                    <div class="col-md-5">
+                        <div class="p-3 rounded-3 h-100" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div class="fw-bold mb-3" style="color: #1B2C59; font-size: 0.9rem;">
+                                Informasi Pengantaran
+                            </div>
+                            <div class="mb-3">
+                                <div class="text-muted small mb-1 fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.03em;">
+                                    No. Kiriman
+                                </div>
+                                <div class="fw-bold text-dark font-monospace" id="podNoKiriman">-</div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="text-muted small mb-1 fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.03em;">
+                                    Waktu Pengantaran
+                                </div>
+                                <div class="fw-semibold text-dark small" id="podWaktu">-</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small mb-1 fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.03em;">
+                                    Koordinat Lokasi
+                                </div>
+                                <div class="fw-semibold text-dark font-monospace small" id="podKoordinat" style="word-break: break-word;">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Foto POD -->
+                    <div class="col-md-7">
+                        <div class="p-3 rounded-3 h-100" style="border: 1px solid #e2e8f0; background: #ffffff;">
+                            <div class="fw-bold mb-3" style="color: #1B2C59; font-size: 0.9rem;">
+                                Foto Bukti Pengantaran
+                            </div>
+                            <div class="d-flex justify-content-center align-items-center rounded-3"
+                                 style="min-height: 280px; background: #f8fafc; border: 1px dashed #cbd5e1;">
+                                <img id="podFoto"
+                                     src=""
+                                     alt="Foto Bukti Pengantaran"
+                                     class="img-fluid rounded"
+                                     style="max-width: 100%; max-height: 300px; object-fit: contain; display: none; cursor: pointer;"
+                                     onclick="window.open(this.src, '_blank')">
+
+                                <div id="podFotoKosong" class="text-center text-muted p-4">
+                                    <i class="bi bi-image fs-1 d-block mb-2 text-secondary"></i>
+                                    <div class="small">Foto bukti tidak tersedia.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer px-4 py-3 border-top" style="background-color: #f8fafc;">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-4 fw-medium" data-bs-dismiss="modal">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const penugasanId = "@penugasanId";
+        let tableDetail;
+        let globalResponseData = null;
+        let currentFilterStatus = "all";
+
+        $(document).ready(function () {
+            // DataTable
+            tableDetail = $('#tableDetailKiriman').DataTable({
+                pageLength: 10,
+                responsive: true,
+                dom: 'tr<"d-flex justify-content-between align-items-center p-3 border-top border-light-subtle text-muted small"ip>',
+                language: {
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Menampilkan 0 data",
+                    paginate: {
+                        previous: "‹",
+                        next: "›"
+                    }
+                }
+            });
+
+            // Ambil detail penugasan
+            getDetailPenugasan();
+
+            // Filter Tabs
+            $('#filterTabs button').click(function () {
+                $('#filterTabs button').removeClass('active');
+                $('#filterTabs button').attr('aria-pressed', 'false');
+
+                $(this).addClass('active');
+                $(this).attr('aria-pressed', 'true');
+
+                currentFilterStatus = $(this).attr('data-filter');
+                applyFilterAndRenderTable();
+            });
+
+            // Hapus penugasan
+            $('#btnHapusPenugasan').click(function () {
+                if (confirm("Apakah Anda ingin menghapus penugasan ini?")) {
+                    hapusPenugasan();
+                }
+            });
+
+            // Klik Lihat POD
+            $(document).on('click', '.btn-lihat-pod', function () {
+                const podData = $(this).attr('data-pod');
+                const noKiriman = $(this).attr('data-no-kiriman') || '-';
+
+                if (!podData) return;
+
+                let pod;
+                try {
+                    pod = JSON.parse(decodeURIComponent(podData));
+                } catch (error) {
+                    console.error("Gagal membaca data POD:", error);
+                    return;
+                }
+
+                $('#podNoKiriman').text(noKiriman);
+
+                if (pod.waktu_pengantaran) {
+                    const waktu = new Date(pod.waktu_pengantaran);
+                    if (!isNaN(waktu.getTime())) {
+                        const day = String(waktu.getDate()).padStart(2, '0');
+                        const month = String(waktu.getMonth() + 1).padStart(2, '0');
+                        const year = waktu.getFullYear();
+                        const hours = String(waktu.getHours()).padStart(2, '0');
+                        const minutes = String(waktu.getMinutes()).padStart(2, '0');
+                        const seconds = String(waktu.getSeconds()).padStart(2, '0');
+                        $('#podWaktu').text(`${day}/${month}/${year} ${hours}:${minutes}:${seconds}`);
+                    } else {
+                        $('#podWaktu').text('-');
+                    }
+                } else {
+                    $('#podWaktu').text('-');
+                }
+
+                if (pod.koordinat) {
+                    $('#podKoordinat').text(pod.koordinat);
+                } else if (pod.latitude != null && pod.longitude != null) {
+                    $('#podKoordinat').text(`${pod.latitude}, ${pod.longitude}`);
+                } else {
+                    $('#podKoordinat').text('-');
+                }
+
+                if (pod.foto_bukti) {
+                    const fotoUrl = `${API_BASE_URL}/api/pod/view/${encodeURIComponent(pod.foto_bukti)}`;
+                    $('#podFoto').attr('src', fotoUrl).show();
+                    $('#podFotoKosong').hide();
+                } else {
+                    $('#podFoto').attr('src', '').hide();
+                    $('#podFotoKosong').show();
+                }
+
+                const modalElement = document.getElementById('modalPod');
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                modal.show();
+            });
+        });
+
+        // GET DETAIL PENUGASAN
+        function getDetailPenugasan() {
+            const endpoint = `${API_BASE_URL}/api/manajemen-antaran/by-penugasan-id/${penugasanId}`;
+
+            $.ajax({
+                url: endpoint,
+                method: "GET",
+                success: function (res) {
+                    console.log(res);
+                    if (res) {
+                        globalResponseData = res;
+                        renderMainInfo(res);
+                        adjustTabLabels(res.jadwal_status);
+                        renderEstimasiOptimasi(res);
+                        applyFilterAndRenderTable();
+                    }
+                },
+                error: function (xhr) {
+                    alert("Gagal memuat data: " + (xhr.responseJSON?.message || xhr.statusText));
+                }
+            });
+        }
+
+        function formatEstimasiJarak(kilometer) {
+            if (!kilometer || kilometer <= 0) return '-';
+            const totalMeter = Math.round(kilometer * 1000);
+            const km = Math.floor(totalMeter / 1000);
+            const meter = totalMeter % 1000;
+            return km > 0
+                ? (meter > 0 ? `${km} km ${meter} m` : `${km} km`)
+                : `${meter} m`;
+        }
+
+        function formatEstimasiWaktu(detik) {
+            if (!detik || detik <= 0) return '-';
+            const totalMenit = Math.round(detik / 60);
+            const jam = Math.floor(totalMenit / 60);
+            const menit = totalMenit % 60;
+            return jam > 0 ? `${jam} jam ${menit} menit` : `${menit} menit`;
+        }
+
+        function renderEstimasiOptimasi(res) {
+            const sudahDioptimasi = res.isOptimized === true;
+            const $belum = $('#estimasiBelumOptimasi');
+            const $sudah = $('#estimasiSudahOptimasi');
+
+            if (!sudahDioptimasi) {
+                $belum.removeClass('d-none');
+                $sudah.addClass('d-none');
+                return;
+            }
+
+            const lokasiTerurut = (res.data || [])
+                .filter(item =>
+                    item.nomor_urutan != null &&
+                    item.paket?.latitude != null &&
+                    item.paket?.longitude != null
+                )
+                .sort((a, b) => a.nomor_urutan - b.nomor_urutan)
+                .map(item => ({
+                    lat: Number(item.paket.latitude),
+                    lon: Number(item.paket.longitude)
+                }));
+
+            $belum.addClass('d-none');
+            $sudah.removeClass('d-none');
+            $('#btnDetailOptimasi').attr(
+                'href',
+                `/Penugasan/DetailOptimasi?penugasanId=${encodeURIComponent(res.penugasan_id)}`
+            );
+
+            if (!lokasiTerurut.length) {
+                $('#estimasiJarak, #estimasiWaktu').text('-');
+                return;
+            }
+
+            $('#estimasiJarak, #estimasiWaktu').text('Memuat...');
+            $.ajax({
+                url: API_BASE_URL + '/api/optimization/calculate',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ locations: lokasiTerurut }),
+                success: function (hasil) {
+                    const segments = hasil.segments || [];
+                    const totalJarak = segments.length
+                        ? segments.reduce((total, segment) => total + Number(segment.distance || 0), 0)
+                        : Number(hasil.totalDistance || 0);
+                    const waktuPerjalananDetik = segments.length
+                        ? segments.reduce((total, segment) => total + Number(segment.duration || 0), 0)
+                        : Number(hasil.totalDuration || 0);
+                    const waktuBerhentiMenit = lokasiTerurut.length * 5;
+                    const totalWaktuDetik = waktuPerjalananDetik + (waktuBerhentiMenit * 60);
+
+                    $('#estimasiJarak').text(formatEstimasiJarak(totalJarak));
+                    $('#estimasiWaktu').text(formatEstimasiWaktu(totalWaktuDetik));
+                },
+                error: function () {
+                    $('#estimasiJarak, #estimasiWaktu').text('-');
+                }
+            });
+        }
+
+        // INFORMASI UTAMA
+        function renderMainInfo(res) {
+            let dateObj = new Date(res.tanggal);
+            let formattedDate = dateObj.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+
+            $('#infoKode').text(res.kode_penugasan || '-');
+            $('#infoKurir').text(res.user_nama || '-');
+            $('#infoTanggal').text(formattedDate);
+            $('#metricTotal').text(res.total || 0);
+
+            let statusHtml = (res.jadwal_status !== "selesai")
+                ? `<span class="status-badge status-delivery"><i class="bi bi-arrow-repeat me-1"></i>Sedang Berjalan</span>`
+                : `<span class="status-badge status-completed"><i class="bi bi-check2-circle me-1"></i>Selesai</span>`;
+
+            $('#infoStatusContainer').html(statusHtml);
+        }
+
+        // LABEL TAB
+        function adjustTabLabels(jadwalStatus) {
+            if (jadwalStatus === "Sedang Berjalan") {
+                $('#tab-mid').html(
+                    `<i class="bi bi-truck"></i>
+                     <span>Diantar</span> <span class="tab-count" id="cnt-mid">0</span>`
+                );
+            } else {
+                $('#tab-mid').html(
+                    `<i class="bi bi-exclamation-circle"></i>
+                     <span>Tidak Terkirim</span> <span class="tab-count" id="cnt-mid">0</span>`
+                );
+            }
+
+            $('#tab-end').html(
+                `<i class="bi bi-check2-circle"></i>
+                 <span>Selesai</span> <span class="tab-count" id="cnt-end">0</span>`
+            );
+        }
+
+        // FILTER + RENDER TABLE
+        function applyFilterAndRenderTable() {
+            if (!globalResponseData) return;
+
+            let dataArray = globalResponseData.data || [];
+            let isStatusAktif = (globalResponseData.jadwal_status === "Sedang Berjalan");
+
+            let countMid = 0;
+            let countEnd = 0;
+            let countTerkirim = 0;
+            let countReturn = 0;
+            let totalBerat = 0;
+
+            tableDetail.clear();
+
+            dataArray.forEach(function (item, index) {
+                let pkt = item.paket || {};
+                let urutan = item.nomor_urutan ?? (index + 1);
+                let beratItem = pkt.berat_kiriman ? parseFloat(pkt.berat_kiriman) : 1.0;
+                totalBerat += beratItem;
+
+                let statusAsliAPI = item.status || "-";
+                let statusPaketStr = statusAsliAPI.toLowerCase();
+
+                let isDelivered = (pkt.is_delivered === true || statusPaketStr === "delivered");
+                let isReturned = (statusPaketStr === "returned");
+                let isItemDone = (isDelivered || isReturned);
+                let isItemRunningOrFailed = !isItemDone;
+
+                if (isItemRunningOrFailed) {
+                    countMid++;
+                } else if (isItemDone) {
+                    countEnd++;
+                    if (isReturned) {
+                        countReturn++;
+                    } else {
+                        countTerkirim++;
+                    }
+                }
+
+                // Filter
+                let passFilter = false;
+                if (currentFilterStatus === "all") {
+                    passFilter = true;
+                } else if (currentFilterStatus === "mid") {
+                    if (isItemRunningOrFailed) passFilter = true;
+                } else if (currentFilterStatus === "end") {
+                    if (isItemDone) passFilter = true;
+                }
+
+                if (!passFilter) return;
+
+                // Status Badge
+                let badgeKiriman = '';
+                if (statusPaketStr === "delivered") {
+                    badgeKiriman = `<span class="status-badge status-completed">Delivered</span>`;
+                } else if (statusPaketStr === "returned") {
+                    badgeKiriman = `<span class="status-badge status-returned">Returned</span>`;
+                } else if (statusPaketStr === "on_delivery") {
+                    badgeKiriman = `<span class="status-badge status-delivery">On Delivery</span>`;
+                } else {
+                    badgeKiriman = `<span class="status-badge status-manifested">${statusAsliAPI}</span>`;
+                }
+
+                // Aksi POD Button
+                let aksiHtml = '';
+                if (pkt.pod == null) {
+                    aksiHtml = `<div class="text-center text-muted small">-</div>`;
+                } else {
+                    const podJson = encodeURIComponent(JSON.stringify(pkt.pod));
+                    aksiHtml = `
+                        <div class="text-center">
+                            <button type="button"
+                                    class="btn-pod-action btn-lihat-pod"
+                                    data-pod="${podJson}"
+                                    data-no-kiriman="${pkt.no_kiriman || '-'}"
+                                    title="Lihat Bukti Pengantaran">
+                                <i class="bi bi-eye"></i>
+                                <span>Lihat POD</span>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                tableDetail.row.add([
+                    `<div class="text-center text-secondary fw-medium">${urutan}</div>`,
+                    `<span class="fw-bold text-dark font-monospace">${pkt.no_kiriman || '-'}</span>`,
+                    `<span class="fw-semibold text-dark">${pkt.recipient_name || '-'}</span>`,
+                    `<span class="text-secondary text-nowrap">${pkt.telepon || '-'}</span>`,
+                    `<span class="text-secondary text-wrap d-block" style="max-width:280px; font-size:0.8rem; line-height:1.4;">${pkt.address || '-'}</span>`,
+                    `<span class="text-secondary text-nowrap">${pkt.jenis_kiriman || '-'}</span>`,
+                    `<span class="text-secondary text-nowrap">${pkt.jenis_layanan || '-'}</span>`,
+                    `<div class="text-center text-dark fw-medium text-nowrap">${pkt.berat_kiriman != null ? pkt.berat_kiriman : '-'}</div>`,
+                    `<div class="text-center">${badgeKiriman}</div>`,
+                    aksiHtml
+                ]);
+            });
+
+            // Counters
+            $('#cnt-all').text(dataArray.length);
+            $('#cnt-mid').text(countMid);
+            $('#cnt-end').text(countEnd);
+
+            // Total Berat
+            $('#metricBerat').html(
+                `${totalBerat.toFixed(1)} <span class="stat-mini-unit">KG</span>`
+            );
+
+            // Dynamic Metrics
+            let htmlMetrics = '';
+            if (isStatusAktif) {
+                htmlMetrics = `
+                    <div class="summary-status-item summary-status-delivery">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-dot dot-delivery"></span>
+                            <span class="summary-status-name">Diantar (On Delivery)</span>
+                        </div>
+                        <span class="summary-status-badge badge-delivery">${countMid}</span>
+                    </div>
+                    <div class="summary-status-item summary-status-completed">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-dot dot-completed"></span>
+                            <span class="summary-status-name">Selesai</span>
+                        </div>
+                        <span class="summary-status-badge badge-completed">${countEnd}</span>
+                    </div>
+                `;
+            } else {
+                htmlMetrics = `
+                    <div class="summary-status-item summary-status-completed">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-dot dot-completed"></span>
+                            <span class="summary-status-name">Delivered</span>
+                        </div>
+                        <span class="summary-status-badge badge-completed">${countTerkirim}</span>
+                    </div>
+                    <div class="summary-status-item summary-status-returned">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-dot dot-returned"></span>
+                            <span class="summary-status-name">Returned</span>
+                        </div>
+                        <span class="summary-status-badge badge-returned">${countReturn}</span>
+                    </div>
+                    <div class="summary-status-item summary-status-pending">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-dot dot-pending"></span>
+                            <span class="summary-status-name">Tidak Terkirim</span>
+                        </div>
+                        <span class="summary-status-badge badge-pending">${countMid}</span>
+                    </div>
+                `;
+            }
+
+            $('#dynamicMetrics').html(htmlMetrics);
+            tableDetail.draw();
+
+            const podColumn = tableDetail.column('.kolom-pod');
+            if (podColumn && podColumn.length) {
+                podColumn.visible(currentFilterStatus !== 'mid');
+            }
+        }
+
+        // HAPUS PENUGASAN
+        function hapusPenugasan() {
+            const deleteEndpoint = `${API_BASE_URL}/api/manajemen-antaran/penugasan?jadwalId=${penugasanId}`;
+            let btn = $('#btnHapusPenugasan');
+
+            $.ajax({
+                url: deleteEndpoint,
+                method: "DELETE",
+                beforeSend: function () {
+                    btn.prop('disabled', true).html(
+                        `<span class="spinner-border spinner-border-sm me-1"></span>`
+                    );
+                },
+                success: function () {
+                    alert("Penugasan berhasil dihapus.");
+                    window.location.href = "/Penugasan/PenugasanPengantaran";
+                },
+                error: function (xhr) {
+                    alert("Gagal menghapus: " + (xhr.responseJSON?.message || "Terjadi kesalahan."));
+                    btn.prop('disabled', false).html(
+                        `<i class="bi bi-trash3 me-1"></i>Hapus Penugasan`
+                    );
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,190 @@
+@{
+    ViewData["Title"] = "Optimasi Pengantaran";
+}
+
+<main>
+    <div class="breadcrumb-bar">
+        <span class="current"><i class="bi bi-map-fill"></i> Optimasi Rute</span>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-3 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center px-3 pb-3 pt-3 border-bottom flex-wrap gap-2">
+                    <div>
+                        <span class="card-title-section">Filter Penugasan</span>
+                        <div style="font-size:12px;" class="text-muted">
+                            Menampilkan data penugasan berdasarkan rentang tanggal
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-3 pb-4 pt-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-lg-3 col-md-6">
+                            <label class="filter-label">Tanggal Dari</label>
+                            <input type="date" id="filterStart" class="form-control form-control-modern shadow-none w-100">
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <label class="filter-label">Tanggal Sampai</label>
+                            <input type="date" id="filterEnd" class="form-control form-control-modern shadow-none w-100">
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="d-flex gap-2">
+                                <button id="btnFilter" class="btn btn-pos w-100 d-inline-flex align-items-center justify-content-center gap-2">
+                                    <i class="bi bi-funnel me-1"></i> Terapkan Filter
+                                </button>
+                                <button id="btnRefresh" class="btn btn-light border px-3 d-inline-flex align-items-center justify-content-center" title="Reset Filter">
+                                    <i class="bi bi-arrow-clockwise fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="d-flex justify-content-between align-items-center px-3 pb-3 pt-3 border-bottom flex-wrap gap-2">
+                    <div>
+                        <span class="card-title-section">Daftar Penugasan</span>
+                        <div style="font-size:12px;" class="text-muted">
+                            Penugasan pengantaran kurir
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="text-muted fw-semibold" style="font-size: 0.9rem;">
+                            Total Data: <span id="totalData" class="badge badge-blue">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table id="tableOptimasi" class="table table-hover table-bordered align-middle w-100 mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 5%;" class="text-center">No</th>
+                                    <th style="width: 15%;">No Penugasan</th>
+                                    <th style="width: 20%;">Oranger Antaran</th>
+                                    <th style="width: 20%;">Tanggal Penugasan</th>
+                                    <th style="width: 15%;">Total Kiriman</th>
+                                    <th style="width: 10%;" class="text-center">Status</th>
+                                    <th style="width: 15%;" class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const API_BASE = API_BASE_URL+"/api/manajemen-antaran";
+
+            // DEFAULT DATE SETTING
+            let d = new Date();
+            let year = d.getFullYear();
+            let month = String(d.getMonth() + 1).padStart(2, '0');
+            let day = String(d.getDate()).padStart(2, '0');
+            let today = `${year}-${month}-${day}`;
+
+            $('#filterStart').val(today);
+            $('#filterEnd').val(today);
+
+            let table = $('#tableOptimasi').DataTable({
+                responsive: true,
+                autoWidth: false,
+                ordering: false,
+                pageLength: 10,
+                language: {
+                    search: "Cari:",
+                    searchPlaceholder: "Ketik kata kunci...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Menampilkan 0 data",
+                    paginate: {
+                        previous: "‹",
+                        next: "›"
+                    }
+                }
+            });
+
+            function loadData() {
+                let start = $('#filterStart').val();
+                let end = $('#filterEnd').val();
+                let apiUrl = `${API_BASE}/penugasan?tglAwal=${start}&tglAkhir=${end}`;
+
+                $.get(apiUrl, function (data) {
+                    table.clear();
+
+                    data.forEach((item,index) => {
+
+                        let statusBadge = item.isOptimized == 0
+                            ? `<span class="badge badge-yellow text-nowrap">Belum Optimasi</span>`
+                            : `<span class="badge badge-green text-nowrap">Sudah Optimasi</span>`;
+
+                        let isOptimasi = item.isOptimized == 0
+                            ? `Optimasi`
+                            : `Optimasi Ulang`;
+
+                        table.row.add([
+                            `<span class="text-center text-muted d-block">${index + 1}</span>`,
+                            `<div>
+                                <div class="fw-semibold text-dark text-nowrap">${item.kodePenugasan}</div>
+                            </div>`,
+                            `<div>
+                                <div class="fw-semibold text-dark">${item.namaKurir}</div>
+                                <small class="text-muted" style="font-size:11px;">Oranger Antaran</small>
+                            </div>`,
+                            `<div>
+                                <div class="fw-medium text-dark">${formatDate(item.tanggal)}</div>
+                                <small class="text-muted" style="font-size:11px;">Penugasan Pengantaran</small>
+                            </div>`,
+                            `<span class="fw-semibold text-dark">${item.jumlahPaket} Kiriman</span>`,
+                            `<div class="text-center">${statusBadge}</div>`,
+                            `<div class="d-flex justify-content-center gap-2">
+                                <a href="@(ViewData["DetailOptimasiUrl"] ?? "/Penugasan/DetailOptimasi")?penugasanId=${item.id}" class="btn btn-pos btn-sm px-3 text-decoration-none">
+                                    <i class="bi bi-diagram-3 me-1"></i> <span class="text-nowrap">${isOptimasi}</span>
+                                </a>
+                            </div>`
+                        ]);
+                    });
+
+                    table.draw();
+                    $('#totalData').text(data.length);
+                });
+            }
+
+            function formatDate(dateString) {
+                let date = new Date(dateString);
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
+
+            $('#btnFilter').click(function () {
+                loadData();
+            });
+
+            $('#btnRefresh').click(function () {
+                $('#filterStart').val(today);
+                $('#filterEnd').val(today);
+                loadData();
+            });
+
+            // Initial load
+            loadData();
+        });
+    </script>
+}

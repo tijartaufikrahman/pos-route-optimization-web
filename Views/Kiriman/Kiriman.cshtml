@@ -1,0 +1,927 @@
+@{
+    ViewData["Title"] = "Data Kiriman";
+}
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqkyOYHvgAZt-mpcn3V_14KoSJJ3Hr4MM&libraries=places" async defer></script>
+
+<style>
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: .75rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    .status-manifested {
+        color: var(--pos-blue);
+        background: rgba(27, 44, 89, 0.08);
+        border: 1px solid rgba(27, 44, 89, 0.15);
+    }
+    .status-delivery {
+        color: #B45309;
+        background: #FEF3C7;
+        border: 1px solid #FDE68A;
+    }
+    .status-completed {
+        color: #15803D;
+        background: #DCFCE7;
+        border: 1px solid #BBF7D0;
+    }
+    .status-returned {
+        color: #B91C1C;
+        background: #FEE2E2;
+        border: 1px solid #FECACA;
+    }
+    .filter-action-spacer {
+        display: block;
+    }
+    @@media (max-width: 991.98px) {
+        .filter-action-spacer {
+            display: none;
+        }
+    }
+    /* Table Card Two-Tier Header & Controls */
+    .table-card-topbar {
+        padding: 1.15rem 1.75rem;
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table-main-title {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.01em;
+    }
+
+    .table-controls-bar {
+        padding: 0.85rem 1.75rem;
+        background: #fafbfc;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .table-controls-left {
+        display: flex;
+        align-items: center;
+    }
+
+    .table-controls-right {
+        display: flex;
+        align-items: center;
+    }
+
+    #tableLengthContainer .dt-length,
+    #tableLengthContainer .dataTables_length,
+    #tableSearchContainer .dt-search,
+    #tableSearchContainer .dataTables_filter {
+        margin: 0 !important;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    #tableLengthContainer label,
+    #tableSearchContainer label {
+        margin: 0 !important;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #475569;
+        white-space: nowrap;
+    }
+
+    #tableLengthContainer select,
+    #tableLengthContainer .form-select {
+        height: 34px !important;
+        padding: 0 28px 0 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        font-size: 0.8rem !important;
+        font-weight: 500;
+        color: #1e293b !important;
+        background-color: #ffffff !important;
+        cursor: pointer;
+        display: inline-block !important;
+        width: auto !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    #tableLengthContainer select:focus {
+        border-color: #1B2C59 !important;
+        box-shadow: 0 0 0 3px rgba(27, 44, 89, 0.08) !important;
+        outline: none;
+    }
+
+    #tableSearchContainer input,
+    #tableSearchContainer .form-control {
+        height: 34px !important;
+        padding: 0 11px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        font-size: 0.8rem !important;
+        color: #1e293b !important;
+        background-color: #ffffff !important;
+        width: 190px !important;
+        outline: none;
+        display: inline-block !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, width 0.2s ease;
+    }
+
+    #tableSearchContainer input:focus {
+        border-color: #1B2C59 !important;
+        box-shadow: 0 0 0 3px rgba(27, 44, 89, 0.08) !important;
+        width: 220px !important;
+    }
+
+    .btn-import-action {
+        height: 34px;
+        padding: 0 13px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 6px;
+        background-color: #1B2C59;
+        color: #ffffff;
+        border: 1px solid transparent;
+        box-shadow: 0 1px 2px rgba(27, 44, 89, 0.12);
+        transition: all 0.2s ease;
+    }
+
+    .btn-import-action:hover {
+        background-color: #142245;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 5px -1px rgba(27, 44, 89, 0.2);
+    }
+
+    .filter-inputs-wrap {
+        display: flex;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .filter-item-date {
+        width: 175px;
+    }
+
+    .filter-item-select {
+        width: 175px;
+    }
+
+    .btn-filter-compact {
+        height: 34px !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        padding: 0 16px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        width: auto !important;
+    }
+
+    @@media (max-width: 576px) {
+        .filter-item-date,
+        .filter-item-select {
+            width: 100% !important;
+        }
+        .btn-filter-compact {
+            width: 100% !important;
+        }
+    }
+
+    /* Enhanced Table Padding for Kiriman */
+    #paketTable thead th {
+        padding: 1.15rem 1.35rem !important;
+        font-size: 0.76rem !important;
+        letter-spacing: 0.04em !important;
+        white-space: nowrap !important;
+    }
+
+    #paketTable tbody td {
+        padding: 1.15rem 1.35rem !important;
+        font-size: 0.84rem !important;
+        vertical-align: middle !important;
+    }
+
+    #paketTable thead th:first-child,
+    #paketTable tbody td:first-child {
+        padding-left: 1.75rem !important;
+    }
+
+    #paketTable thead th:last-child,
+    #paketTable tbody td:last-child {
+        padding-right: 1.75rem !important;
+    }
+
+    .dash-table-wrapper {
+        padding-bottom: 1.5rem !important;
+    }
+
+    .dash-table-wrapper .table-responsive {
+        padding-bottom: 0.75rem !important;
+    }
+
+    .dash-table-wrapper .dt-container .dt-layout-row:last-child,
+    .dash-table-wrapper .dataTables_wrapper .row:last-child {
+        padding: 1.25rem 1.75rem 1.5rem 1.75rem !important;
+    }
+</style>
+
+<main>
+
+
+    <!-- Filter & Search Toolbar Card -->
+    <div class="table-toolbar-card">
+        <div class="filter-inputs-wrap">
+            <div class="filter-item-date">
+                <label class="form-field-label" for="filterTanggalAwal">Tanggal Awal</label>
+                <input type="date" id="filterTanggalAwal" class="form-field-input">
+            </div>
+            <div class="filter-item-date">
+                <label class="form-field-label" for="filterTanggalAkhir">Tanggal Akhir</label>
+                <input type="date" id="filterTanggalAkhir" class="form-field-input">
+            </div>
+            <div class="filter-item-select">
+                <label class="form-field-label" for="filterStatus">Status Kiriman</label>
+                <select id="filterStatus" class="form-field-select">
+                    <option value="">Semua Status</option>
+                    <option value="Manifested">Manifested</option>
+                    <option value="on_delivery">On Delivery</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="returned">Returned</option>
+                </select>
+            </div>
+            <div>
+                <button type="button" id="btnFilter" class="btn btn-pos btn-filter-compact">
+                    <i class="bi bi-funnel me-1"></i> Terapkan Filter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="dash-table-wrapper">
+        <!-- Top Row: Card Title (No icon) & Import Data Button -->
+        <div class="table-card-topbar">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <h3 class="table-main-title">Data Kiriman</h3>
+                <button type="button" class="btn btn-pos btn-import-action shadow-sm" id="btnTambah">
+                    <i class="bi bi-file-earmark-arrow-up"></i>
+                    <span>Import Data</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls Toolbar Row Below Title: Length & Search -->
+        <div class="table-controls-bar">
+            <div class="table-controls-left">
+                <div id="tableLengthContainer"></div>
+            </div>
+            <div class="table-controls-right">
+                <div id="tableSearchContainer"></div>
+            </div>
+        </div>
+        <div class="table-responsive p-0">
+            <table id="paketTable" class="table table-hover w-100 mb-0" style="min-width: 900px;">
+                <thead>
+                    <tr>
+                        <th class="text-center" width="50">No</th>
+                        <th class="text-center">Nomor Kiriman</th>
+                        <th class="text-center">Jenis Layanan</th>
+                        <th class="text-center">Nama Penerima</th>
+                        <th class="text-center">Telepon</th>
+                        <th class="text-center">Berat (KG)</th>
+                        <th class="text-center">Tanggal Ditambahkan</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center" style="width: 80px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL IMPORT KIRIMAN -->
+<div class="modal fade" id="paketModal" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <span class="fw-semibold"><i class="bi bi-file-earmark-excel text-primary me-1"></i> Import Data Kiriman</span>
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4 pt-3">
+                <div class="text-center mb-4">
+                    <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:72px;height:72px;">
+                        <i class="bi bi-cloud-arrow-up" style="font-size:1.8rem; color: var(--pos-blue);"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-1">Upload File Excel</h6>
+                    <p class="text-muted small mb-0">Import kiriman dari file Excel (.xlsx)</p>
+                </div>
+
+                <div class="upload-drop-zone rounded-4 p-5 text-center mb-2">
+                    <input type="file" accept=".xlsx" id="fileExcel">
+                    <div class="upload-icon mb-3">
+                        <i class="bi bi-cloud-arrow-up-fill opacity-75" style="font-size: 3.5rem; color: var(--pos-blue);"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-dark">Klik atau drag &amp; drop file di sini</h6>
+                    <p class="text-muted small mb-0">Format yang didukung: <b>.xlsx</b></p>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <button type="button" class="btn text-secondary fw-medium px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" id="btnMulaiUpload" class="btn btn-pos px-4 btn-pill fw-semibold shadow-sm d-flex align-items-center gap-2">
+                        Preview Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PREVIEW EXCEL -->
+<div class="modal fade" id="previewModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 bg-white rounded-top-4 pb-3 pt-4 px-4">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-table text-primary"></i> Preview Data Kiriman
+                    </h5>
+                    <p class="mb-0 text-muted small mt-1">Pastikan data berikut sudah sesuai standar format sebelum disimpan.</p>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="loadingPreview" class="text-center py-5 text-muted fw-medium" style="display:none;">
+                    <span class="spinner-border spinner-border-sm me-2 text-primary" role="status"></span>
+                    Membaca file Excel...
+                </div>
+                <div class="mt-2 table-responsive px-4 pb-3" id="tablePreviewContainer">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="sticky-top table-light">
+                            <tr>
+                                <th class="text-center">No</th>
+                                <th>Nomor Kiriman</th>
+                                <th>Jenis Layanan</th>
+                                <th>Nama Penerima</th>
+                                <th>Alamat Lengkap</th>
+                                <th>Telepon</th>
+                                <th>Jenis Kiriman</th>
+                                <th>Berat (Kg)</th>
+                                <th class="d-none">Koordinat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBodyPreview"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary fw-medium px-4 rounded-pill" data-bs-dismiss="modal">
+                    Batal
+                </button>
+                <button type="button" class="btn btn-pos fw-semibold px-4 rounded-pill d-flex align-items-center gap-2" id="btnSimpanExcelDB">
+                    <i class="bi bi-check-circle-fill"></i> Simpan Data Kiriman
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL MAP -->
+<div class="modal fade" id="mapModal" tabindex="-1" data-bs-focus="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header text-white" style="background: var(--pos-blue);">
+                <h5 class="modal-title fw-semibold">
+                    <i class="bi bi-geo-alt-fill me-2"></i>
+                    Pilih Titik Koordinat
+                </h5>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col">
+                                <input type="text" class="form-control shadow-none" id="searchInput" placeholder="Cari alamat atau lokasi...">
+                            </div>
+                            <div class="col-lg-3">
+                                <button class="btn w-100 text-white shadow-none" style="background: var(--pos-blue);" id="btnGeocoding">
+                                    Cari
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="map" class="rounded border" style="height:450px;"></div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Latitude</label>
+                        <input type="text" class="form-control shadow-none" id="latitude" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Longitude</label>
+                        <input type="text" class="form-control shadow-none" id="longitude" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                <button class="btn text-white" style="background: var(--pos-blue);" id="btnSaveLocation">
+                    Gunakan Lokasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        const wibDateParts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Jakarta',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).formatToParts(new Date());
+        const todayWIB = wibDateParts.reduce(function (result, part) {
+            result[part.type] = part.value;
+            return result;
+        }, {});
+        const tanggalHariIni = todayWIB.year + '-' + todayWIB.month + '-' + todayWIB.day;
+
+        $('#filterTanggalAwal').val(tanggalHariIni);
+        $('#filterTanggalAkhir').val(tanggalHariIni);
+        $('#filterStatus').val('');
+
+        // =============================================
+        // KONTROL TABEL: PINDAHKAN LENGTH & SEARCH KE TOOLBAR
+        // =============================================
+        function relocateTableControls() {
+            var $wrap = $('#paketTable').closest('.dt-container');
+            if (!$wrap.length) $wrap = $('#paketTable').closest('.dataTables_wrapper');
+
+            var $length = $wrap.find('.dt-length, .dataTables_length');
+            var $search = $wrap.find('.dt-search, .dataTables_filter');
+
+            if ($length.length && !$('#tableLengthContainer').children().length) {
+                $length.appendTo('#tableLengthContainer');
+            }
+            if ($search.length && !$('#tableSearchContainer').children().length) {
+                $search.appendTo('#tableSearchContainer');
+            }
+
+            var $searchInput = $('#tableSearchContainer').find('input');
+            if ($searchInput.length && !$searchInput.attr('placeholder')) {
+                $searchInput.attr('placeholder', 'Ketik kata kunci...');
+            }
+
+            $wrap.find('> .row:first-child:not(.dt-layout-table)').hide();
+            $wrap.find('.dt-layout-row:first-child:not(.dt-layout-table)').hide();
+        }
+
+        // =============================================
+        // TABEL UTAMA: DAFTAR KIRIMAN
+        // =============================================
+        var mainTable = $('#paketTable').DataTable({
+            columnDefs: [
+                { targets: "_all", className: "text-center" }
+            ],
+            initComplete: function () {
+                relocateTableControls();
+            },
+            drawCallback: function () {
+                relocateTableControls();
+            },
+            columns: [
+                { data: null, render: (d, t, r, m) => m.row + 1 },
+                { data: 'no_kiriman', className: 'fw-bold' },
+                { data: 'service' },
+                { data: 'recipient_name' },
+                { data: 'telepon_penerima' },
+                { data: 'berat_kiriman' },
+                {
+                    data: 'created_at',
+                    render: (data) => {
+                        if (!data) return '-';
+                        const tanggal = new Date(data);
+                        const hari = String(tanggal.getDate()).padStart(2, '0');
+                        const bulan = String(tanggal.getMonth() + 1).padStart(2, '0');
+                        return hari + '/' + bulan + '/' + tanggal.getFullYear();
+                    }
+                },
+                {
+                    data: 'status',
+                    render: (data) => {
+                        const statuses = {
+                            Manifested: { label: 'Manifested', className: 'status-manifested' },
+                            manifested: { label: 'Manifested', className: 'status-manifested' },
+                            on_delivery: { label: 'On Delivery', className: 'status-delivery' },
+                            delivered: { label: 'Delivered', className: 'status-completed' },
+                            Selesai: { label: 'Delivered', className: 'status-completed' },
+                            returned: { label: 'Returned', className: 'status-returned' }
+                        };
+                        const status = statuses[data] || { label: data || '-', className: '' };
+                        return '<span class="status-badge ' + status.className + '">' + status.label + '</span>';
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: (data, type, row) => {
+                        if (row.isAction === 1) {
+                            return `<button class="btn btn-sm btn-outline-danger" onclick="hapusKiriman(${row.id})" title="Hapus Kiriman"><i class="bi bi-trash"></i></button>`;
+                        }
+                        return '<span class="text-muted small">-</span>';
+                    }
+                }
+            ]
+        });
+
+        // =============================================
+        // LOAD DATA KIRIMAN
+        // =============================================
+        function loadPaket() {
+            var tanggalAwal = $('#filterTanggalAwal').val();
+            var tanggalAkhir = $('#filterTanggalAkhir').val();
+            var status = $('#filterStatus').val();
+
+            if (tanggalAwal && tanggalAkhir && tanggalAwal > tanggalAkhir) {
+                alert('Tanggal awal tidak boleh melebihi tanggal akhir.');
+                return;
+            }
+
+            var params = new URLSearchParams();
+            if (tanggalAwal) params.set('tanggalAwal', tanggalAwal);
+            if (tanggalAkhir) params.set('tanggalAkhir', tanggalAkhir);
+            if (status) params.set('status', status);
+
+            var query = params.toString();
+            $.get(API_BASE_URL + '/api/paket/list-kiriman' + (query ? '?' + query : ''))
+                .done(function (res) {
+                    let dataUntukTable = res.data ? res.data : res;
+                    if (Array.isArray(dataUntukTable)) {
+                        mainTable.clear();
+                        mainTable.rows.add(dataUntukTable);
+                        mainTable.draw();
+                        mainTable.columns.adjust();
+                    } else {
+                        console.warn("Format data bukan Array!", dataUntukTable);
+                        mainTable.clear().draw();
+                    }
+                })
+                .fail(function (err) {
+                    console.error("Gagal load data", err);
+                    alert("Koneksi ke API gagal/error.");
+                });
+        }
+
+        loadPaket();
+
+        $('#btnFilter').click(function () {
+            loadPaket();
+        });
+
+        /* IMPORT KIRIMAN */
+        $('#btnTambah').click(function () {
+            new bootstrap.Modal(document.getElementById('paketModal')).show();
+        });
+    });
+
+    // Hapus Kiriman
+    function hapusKiriman(id) {
+        if (!confirm('Yakin ingin menghapus kiriman ini?')) return;
+        $.ajax({
+            url: API_BASE_URL + '/api/paket/' + id,
+            type: 'DELETE',
+            success: function (res) {
+                alert(res.message);
+                window.location.reload();
+            },
+            error: function () {
+                alert('Gagal menghapus kiriman');
+            }
+        });
+    }
+</script>
+
+<script>
+    let paketModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('paketModal'));
+    let previewModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('previewModal'));
+    let previewData = [];
+
+    const KOLOM_WAJIB = [
+        "No", "Nomor Kiriman", "IdPelanggan Korporat", "Kantor Kiriman", "Jenis Layanan",
+        "COD/NON COD", "Tanggal Kirim", "Isi Kiriman", "Berat Kiriman", "Kriteria Kiriman",
+        "Bea Dasar", "Nama Pengirim", "Telp Pengirim", "Alamat Pengirim", "Nama Penerima",
+        "Telp Penerima", "Alamat Penerima"
+    ];
+
+    function normalisasiKolom(header) {
+        return String(header || "").trim().toLowerCase().replace(/\s+/g, "");
+    }
+
+    function cekFileXlsx(file) {
+        if (!file) {
+            alert("Harap pilih file Excel terlebih dahulu!");
+            return false;
+        }
+        const ekstensi = file.name.split(".").pop().toLowerCase();
+        if (ekstensi !== "xlsx") {
+            alert("File harus berformat .xlsx!");
+            return false;
+        }
+        return true;
+    }
+
+    function cekKolomExcel(file, callback) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                if (!json || json.length === 0) {
+                    alert("File Excel kosong atau tidak memiliki baris header.");
+                    callback(false);
+                    return;
+                }
+
+                const headerFile = (json[0] || []).map(normalisasiKolom);
+                const kolomKurang = KOLOM_WAJIB.filter(k => !headerFile.includes(normalisasiKolom(k)));
+
+                if (kolomKurang.length > 0) {
+                    alert("Format file tidak sesuai!");
+                    callback(false);
+                    return;
+                }
+                callback(true);
+            } catch (err) {
+                console.error("Gagal membaca file Excel:", err);
+                alert("Gagal membaca file Excel. Pastikan file berformat .xlsx yang valid.");
+                callback(false);
+            }
+        };
+        reader.onerror = function () {
+            alert("Gagal membaca file.");
+            callback(false);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    $('#btnMulaiUpload').click(function () {
+        let fileInput = $("#fileExcel")[0];
+        let file = fileInput.files[0];
+        if (!cekFileXlsx(file)) return;
+        cekKolomExcel(file, function (valid) {
+            if (!valid) return;
+            prosesPreviewExcel(file);
+        });
+    });
+
+    function prosesPreviewExcel(file) {
+        paketModalInstance.hide();
+        previewModalInstance.show();
+
+        $("#tablePreviewContainer").hide();
+        $("#loadingPreview").show();
+        $("#tableBodyPreview").html("");
+
+        let formData = new FormData();
+        formData.append("file", file);
+
+        $.ajax({
+            url: API_BASE_URL + "/api/paket/upload-excel",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                $("#loadingPreview").hide();
+                $("#tablePreviewContainer").show();
+
+                let data = res.data || res;
+                if (!data || data.length === 0) {
+                    alert("File berhasil dibaca, namun kosong.");
+                    return;
+                }
+                previewData = data.map(item => item.request_data);
+
+                let rows = "";
+                data.forEach((item, index) => {
+                    let req = item.request_data;
+                    let layananBadge = `<span class="badge badge-blue rounded-pill">${req.jenis_layanan}</span>`;
+
+                    rows += `
+                        <tr>
+                            <td class="text-center text-muted">${index + 1}</td>
+                            <td class="fw-bold text-dark">${req.nomor_kiriman ?? '-'}</td>
+                            <td>${layananBadge}</td>
+                            <td class="fw-medium">${req.nama_penerima ?? '-'}</td>
+                            <td>
+                                <span class="d-inline-block text-truncate" style="max-width: 200px;" title="${req.alamat_penerima ?? '-'}">
+                                    ${req.alamat_penerima ?? '-'}
+                                </span>
+                            </td>
+                            <td>${req.telepon_penerima ?? '-'}</td>
+                            <td>${req.kriteria_kiriman}</td>
+                            <td class="text-end pe-4">${req.berat_kiriman ?? 0}</td>
+                            <td class="text-start d-none">${req.koordinat ?? '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                $("#tableBodyPreview").html(rows);
+            },
+            error: function (err) {
+                $("#loadingPreview").hide();
+                alert("Gagal membaca file Excel! Pastikan format sesuai dan API berjalan.");
+                console.log(err);
+            }
+        });
+    }
+
+    $("#btnSimpanExcelDB").click(function () {
+        if (!previewData || previewData.length === 0) {
+            alert("Tidak ada data preview yang bisa disimpan!");
+            return;
+        }
+
+        let btn = $(this);
+        let originalText = btn.html();
+        btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2"></span> Menyimpan...');
+
+        $.ajax({
+            url: API_BASE_URL + "/api/paket/bulk-insert",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(previewData),
+            success: function (res) {
+                alert("Data berhasil disimpan");
+                btn.prop("disabled", false).html(originalText);
+                previewModalInstance.hide();
+                previewData = [];
+                window.location.reload();
+            },
+            error: function (err) {
+                btn.prop("disabled", false).html(originalText);
+                alert("Gagal menyimpan data. Silakan coba lagi.");
+                console.error("Error Detail:", err);
+            }
+        });
+    });
+
+    $('#paketModal').on('hidden.bs.modal', function () {
+        $('#fileExcel').val('');
+        previewData = [];
+    });
+
+    $('#previewModal').on('hidden.bs.modal', function () {
+        $('#fileExcel').val('');
+        previewData = [];
+    });
+</script>
+
+<!-- UNTUK PETA GOOGLE -->
+<script>
+    let map, marker, geocoder, placesService;
+    const defaultLocation = { lat: -7.0602586000, lng: 108.0876617000 };
+
+    $('#btnMap').click(function () {
+        new bootstrap.Modal(document.getElementById('mapModal')).show();
+        setTimeout(() => {
+            if (!map) {
+                $.ajax({
+                    url: API_BASE_URL + "/api/lokasi-kantor/getKantor",
+                    type: 'GET',
+                    success: function (data) {
+                        if (data && data.latitude && data.longitude) {
+                            defaultLocation.lat = data.latitude;
+                            defaultLocation.lng = data.longitude;
+                        } else {
+                            defaultLocation.lat = 0;
+                            defaultLocation.lng = 0;
+                        }
+                        initMap();
+                        if (!data || !data.latitude || !data.longitude) {
+                            map.setZoom(2);
+                            $("#latitude").val('');
+                            $("#longitude").val('');
+                        }
+                    },
+                    error: function () {
+                        defaultLocation.lat = 0;
+                        defaultLocation.lng = 0;
+                        initMap();
+                        map.setZoom(2);
+                        $("#latitude").val('');
+                        $("#longitude").val('');
+                    }
+                });
+            } else {
+                google.maps.event.trigger(map, 'resize');
+                map.setCenter(marker.getPosition());
+            }
+        }, 500);
+    });
+
+    function initMap() {
+        geocoder = new google.maps.Geocoder();
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: defaultLocation,
+            zoom: 15,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false
+        });
+        placesService = new google.maps.places.PlacesService(map);
+        marker = new google.maps.Marker({
+            position: defaultLocation,
+            map: map,
+            draggable: true
+        });
+
+        $("#latitude").val(defaultLocation.lat);
+        $("#longitude").val(defaultLocation.lng);
+
+        map.addListener("click", function (event) {
+            marker.setPosition(event.latLng);
+            $("#latitude").val(event.latLng.lat());
+            $("#longitude").val(event.latLng.lng());
+        });
+
+        marker.addListener("dragend", function (event) {
+            $("#latitude").val(event.latLng.lat());
+            $("#longitude").val(event.latLng.lng());
+        });
+    }
+
+    $("#btnGeocoding").on("click", function () {
+        const address = $("#searchInput").val();
+        if (!address) {
+            alert("Masukkan alamat terlebih dahulu");
+            return;
+        }
+        geocoder.geocode({ address: address }, function (results, status) {
+            if (status === "OK") {
+                const location = results[0].geometry.location;
+                map.setCenter(location);
+                map.setZoom(17);
+                marker.setPosition(location);
+                $("#latitude").val(location.lat());
+                $("#longitude").val(location.lng());
+            } else {
+                alert("Geocoding gagal: " + status);
+            }
+        });
+    });
+
+    $("#btnPlaces").on("click", function () {
+        const query = $("#searchInput").val();
+        if (!query) {
+            alert("Masukkan lokasi terlebih dahulu");
+            return;
+        }
+        const request = { query: query, fields: ["name", "geometry"] };
+        placesService.findPlaceFromQuery(request, function (results, status) {
+            if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+                const location = results[0].geometry.location;
+                map.setCenter(location);
+                map.setZoom(17);
+                marker.setPosition(location);
+                $("#latitude").val(location.lat());
+                $("#longitude").val(location.lng());
+            } else {
+                alert("Places gagal: " + status);
+            }
+        });
+    });
+
+    $("#btnSaveLocation").on("click", function () {
+        const lat = $("#latitude").val();
+        const lng = $("#longitude").val();
+        $("#koordinat").val(lat + ", " + lng);
+        bootstrap.Modal.getInstance(document.getElementById("mapModal")).hide();
+    });
+</script>

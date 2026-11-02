@@ -1,0 +1,1661 @@
+@{
+    ViewData["Title"] = "Optimasi Pengantaran";
+    var modeRingkas = ViewData["ModeRingkas"] as bool? == true;
+}
+
+<style>
+    .card-custom {
+        background: #ffffff;
+        border-radius: var(--pos-radius);
+        border: 1px solid var(--pos-border);
+        box-shadow: var(--pos-shadow);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .card-header-simple {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--pos-border);
+        background-color: #ffffff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--pos-blue);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    #map {
+        height: 400px;
+        width: 100%;
+        border-radius: var(--pos-radius-sm);
+        background-color: #F1F5F9;
+        border: 1px solid var(--pos-border);
+        z-index: 1;
+    }
+
+    .btn-brand {
+        background-color: var(--pos-orange);
+        color: white;
+        font-weight: 600;
+        border-radius: var(--pos-radius-sm);
+        padding: 10px 20px;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-brand:hover {
+        background-color: var(--pos-orange-hover);
+        color: white;
+    }
+
+    .btn-brand:disabled {
+        background-color: #CBD5E1;
+        color: #94A3B8;
+    }
+
+    .btn-primary-custom {
+        background-color: var(--pos-blue);
+        color: white;
+        font-weight: 600;
+        border-radius: var(--pos-radius-sm);
+        padding: 10px 20px;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-primary-custom:hover {
+        background-color: var(--pos-blue-hover);
+        color: white;
+    }
+
+    .btn-outline-custom {
+        border: 1px solid var(--pos-border);
+        color: var(--pos-text);
+        font-weight: 600;
+        border-radius: var(--pos-radius-sm);
+        padding: 10px 20px;
+        background: white;
+        transition: all 0.2s;
+    }
+
+    .btn-outline-custom:hover {
+        background-color: #F8FAFC;
+    }
+
+    /* Styling Custom Tabs */
+    .custom-tabs {
+        display: flex;
+        border-bottom: 2px solid var(--pos-border);
+        margin-bottom: 16px;
+        gap: 4px;
+    }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 10px 16px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--pos-text-muted);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .tab-btn:hover {
+        color: var(--pos-blue);
+    }
+
+    .tab-btn.active {
+        color: var(--pos-blue);
+        border-bottom: 2px solid var(--pos-blue);
+    }
+
+    .table-container {
+        padding: 0 20px 20px 20px;
+    }
+
+    .seq-number {
+        background: var(--pos-blue);
+        color: white;
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 0.72rem;
+        font-weight: bold;
+    }
+
+    .badge-count {
+        padding: 2px 7px;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .badge-success-soft {
+        background-color: #DCFCE7;
+        color: #15803D;
+    }
+
+    .badge-warning-soft {
+        background-color: #FEF3C7;
+        color: #B45309;
+    }
+
+    .badge-primary-soft {
+        background-color: #DBEAFE;
+        color: #1D4ED8;
+    }
+
+    .badge-danger-soft {
+        background-color: #FEE2E2;
+        color: #B91C1C;
+    }
+
+    /* Tombol toggle garis rute di peta */
+    .rute-toggle-btn {
+        width: 34px;
+        height: 34px;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .toggle-line {
+        display: block;
+        width: 18px;
+        height: 3px;
+        border-radius: 2px;
+    }
+
+    /* Loader full layar */
+    .loader-fullscreen {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loader-box {
+        background: #FFFFFF;
+        border-radius: 12px;
+        padding: 32px 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .loader-text {
+        margin-top: 14px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--pos-blue);
+    }
+
+    /* Hasil optimasi cards */
+    .info-section-title {
+        display: flex;
+        align-items: center;
+        font-weight: 700;
+        font-size: 0.75rem;
+        color: var(--pos-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+    }
+
+    .info-tile {
+        background: var(--pos-bg);
+        border: 1px solid var(--pos-border);
+        border-radius: var(--pos-radius-sm);
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 100%;
+    }
+
+    .tile-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: var(--pos-radius-sm);
+        background: rgba(27, 44, 89, 0.08);
+        color: var(--pos-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .tile-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--pos-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .tile-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--pos-blue);
+        line-height: 1.2;
+    }
+
+    .time-breakdown {
+        border: 1px solid var(--pos-border);
+        border-radius: var(--pos-radius-sm);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .time-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--pos-border);
+    }
+
+    .time-row:last-child {
+        border-bottom: none;
+    }
+
+    .time-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--pos-blue);
+        flex-shrink: 0;
+    }
+
+    .time-row-name {
+        font-weight: 500;
+        font-size: 0.82rem;
+        color: var(--pos-text);
+    }
+
+    .time-row-value {
+        margin-left: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+    }
+
+    .time-value {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--pos-blue);
+    }
+
+    .time-row-total {
+        background: rgba(27, 44, 89, 0.04);
+    }
+
+    .time-row-total .time-row-name {
+        font-weight: 700;
+        color: var(--pos-blue);
+    }
+
+    .compact-optimasi .card-custom {
+        border-radius: var(--pos-radius-sm);
+        border-color: var(--pos-border);
+        box-shadow: var(--pos-shadow);
+    }
+</style>
+<div class="container-fluid px-0 @(modeRingkas ? "compact-optimasi" : "")">
+
+    <div class="breadcrumb-bar">
+        <a href="/Penugasan/OptimasiPengantaran"><i class="bi bi-map-fill"></i> Optimasi Rute</a>
+        <span class="sep">/</span>
+        <span class="current">Detail</span>
+    </div>
+
+    <div class="row pb-5">
+
+
+
+        <div class="col-lg">
+            <div class="card card-custom" id="pengaturanOptimasi">
+                <div class="card-header-simple">
+                    <span>Sebaran Titik Pengantaran</span>
+                </div>
+                <div class="card-body p-4 ">
+                    <div id="map" style="height:625px;"></div>
+                </div>
+            </div>
+
+            <div class="card card-custom">
+                <div class="card-header-simple border-0 pb-0 pt-4 bg-white">
+                    <span id="tableTitle"> Daftar  Kiriman</span>
+                </div>
+
+                <div class="card-body table-container pt-3">
+
+                    <div class="custom-tabs" id="kirimanTabs" style="display: none;">
+                        <button class="tab-btn" data-type="route" style="display: none;">
+                            <i class="bi bi-signpost-split-fill"></i> Urutan Pengantaran
+                            <span class="badge-count badge-primary-soft" id="countRoute">0</span>
+                        </button>
+                        <button class="tab-btn active" data-type="valid">
+                            <i class="bi bi-geo-alt-fill"></i> Titik Lokasi tersedia
+                            <span class="badge-count badge-success-soft" id="countValid">0</span>
+                        </button>
+                        <button id="belumdioptimasi" class="tab-btn" data-type="unoptimized">
+                            <i class="bi bi-clock-history"></i> Belum Dioptimasi
+                            <span class="badge-count badge-warning-soft" id="countUnoptimized">0</span>
+                        </button>
+                        <button class="tab-btn" data-type="invalid">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Titik Lokasi Tidak Tersedia
+                            <span class="badge-count badge-danger-soft" id="countInvalid">0</span>
+                        </button>
+                    </div>
+
+                    <div id="alertRoute" class="alert alert-primary py-2 px-3 mt-2 mb-3" style="font-size: 0.85rem; display: none;">
+                        <i class="bi bi-info-circle-fill me-2"></i>Urutan pengantaran.
+                    </div>
+                    <div id="alertValidInfo" class="alert alert-info py-2 px-3 mt-2 mb-3" style="font-size: 0.85rem; display: none;">
+                        <i class="bi bi-info-circle-fill me-2"></i>Kiriman yang <b>memiliki titik lokasi pengantaran </b>
+                    </div>
+                    <div id="alertUnoptimized" class="alert alert-warning py-2 px-3 mt-2 mb-3" style="font-size: 0.85rem; display: none;">
+                        <i class="bi bi-info-circle-fill me-2"></i>Data ini memiliki titik lokasi pengantaran namun <b>belum diikutsertakan</b> dalam optimasi rute.
+                    </div>
+                    <div id="alertInvalid" class="alert alert-danger py-2 px-3 mt-2 mb-3" style="font-size: 0.85rem; display: none;">
+                        <i class="bi bi-info-circle-fill me-2"></i>Data ini <b>tidak memiliki titik lokasi pengantaran</b>, sehingga tidak dapat diikutsertakan dalam optimasi rute.
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="tableKiriman" class="table table-hover">
+                            <thead id="theadKiriman">
+                                <tr>
+                                    <th style="width: 50px;" class="text-center">No</th>
+                                    <th>No Kiriman</th>
+                                    <th>Penerima</th>
+                                    <th>No Telp</th>
+                                    <th>Alamat Lengkap</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyKiriman">
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="text-muted" style="font-size: 0.95rem;">
+                                            <i class="bi bi-inbox d-block mb-2" style="font-size: 2rem; color: #CBD5E1;"></i>
+                                            Tidak ada data kiriman.
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+
+            <div class="card card-custom">
+                <div class="card-header-simple">
+                    <span>Informasi Penugasan</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">ID PENUGASAN : </label>
+                        <label id="idPenugasan" class="form-label text-muted  " style="font-size: 0.8rem;">-</label>
+                    </div>
+
+                    <div class="">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">ORANGER ANTARAN : </label>
+                        <label id="idnama" class="form-label text-muted fw-normal " style="font-size: 0.8rem;">-</label>
+                    </div>
+
+                    <div class="">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">TANGGAL PENUGASAN : </label>
+                        <label id="tanggal" class="form-label text-muted fw-normal " style="font-size: 0.8rem;">-</label>
+                    </div>
+
+                    <div class="">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">TOTAL KIRIMAN : </label>
+                        <label id="total" class="form-label text-muted fw-normal " style="font-size: 0.8rem;">-</label>
+                    </div>
+
+                    <div id="btnSetKurir" class=""></div>
+                </div>
+            </div>
+
+            <div class="card card-custom">
+                <div class="card-header-simple">
+                    <span></span>
+                </div>
+                <div class="card-body px-4 py-3">
+                    <div id="hisAlgo" class="d-none mb-4">
+                        <button type="button" class="btn btn-outline-custom w-100" data-bs-toggle="modal" data-bs-target="#modalHistoriACO">
+                            <i class="bi bi-graph-up-arrow me-2"></i>
+                            Lihat Histori Algoritma
+                        </button>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">
+                            Algoritma Optimasi
+                        </label>
+                        <select class="form-select" id="jenisAlgoritma">
+                            <option value="ant" selected>
+                                Ant Colony Optimization - 2 Opt
+                            </option>
+
+                            <option value="nn">
+                                Neirest Neigboard
+                            </option>
+
+                            <option value="ge">
+                                Genetika - 2 Opt
+                            </option>
+
+                            
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">Jenis Kendaraan</label>
+                        <select class="form-select" id="" disabled>
+                            <option value="tercepat">Mobil</option>
+                            <option value="terpendek" selected>Sepeda Motor (Roda 2)</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-muted fw-bold" style="font-size: 0.8rem;">WAKTU BERHENTI PER TITIK (MENIT)</label>
+                        <input type="number" class="form-control" disabled id="waktuBerhenti" value="5" min="0">
+                    </div>
+
+                    <p id="infoOptimasi" class="text-muted mb-3" style="font-size: 0.75rem;">
+
+                    </p>
+
+                    <button type="button" id="btnProses" class="btn btn-brand w-100" disabled>
+                        Mulai Optimasi Rute
+                    </button>
+                    <p class="mt-3 text-muted mb-3" style="font-size: 0.75rem;">
+                        <i class="bi bi-info-circle me-1"></i>Hanya memproses kiriman yang memiliki lokasi titik lokasi (koordinat).
+                    </p>
+                </div>
+            </div>
+
+            <div class="card card-custom" id="hasilOptimasi" style="display: none;">
+                <div class="d-none card-header-simple">
+                    <span>
+                        <i class="bi bi-graph-up-arrow me-2" style="color: var(--pos-blue);"></i>
+                        Ringkasan Estimasi
+                        </span>
+                    <span class="d-none badge-count badge-primary-soft">
+                        <!--<i class="bi bi-geo-alt-fill me-1"></i>-->
+                        <span id="optCount">0</span> Titik
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="info-section-title">
+                        <i class="bi bi-signpost-split-fill me-1"></i> Informasi Perjalanan
+                    </div>
+
+                    <div class="info-tile mb-3">
+                        <div class="tile-icon">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
+                        <div>
+                            <div class="tile-label">Total Jarak</div>
+                            <div class="tile-value" id="optJarakKesimpulan2">0 km</div>
+                        </div>
+                    </div>
+
+                    <div class="info-tile">
+                        <div class="tile-icon">
+                            <i class="bi bi-stopwatch"></i>
+                        </div>
+                        <div>
+                            <div class="tile-label">Estimasi Waktu</div>
+                            <div class="tile-value" id="optWaktuJalan" style="white-space: nowrap;">0 menit</div>
+                            <div class="tile-sub d-none" id="optWaktuJalanJam"></div>
+                        </div>
+                    </div>
+
+                    <div class="info-section-title mt-4">
+                        <i class="bi bi-clock-history me-1"></i> Rincian Waktu
+                    </div>
+
+                    <div class="time-breakdown">
+                        <div class="time-row">
+                            <span class="time-dot"></span>
+                            <div class="time-row-name">Waktu Perjalanan</div>
+                            <div class="time-row-value">
+                                <div class="time-value"><span id="optWaktuJalan2" style="white-space: nowrap;">0 menit</span></div>
+                                <div class="time-sub d-none" id="optWaktuJalanJam2"></div>
+                            </div>
+                        </div>
+
+                        <div class="time-row">
+                            <span class="time-dot"></span>
+                            <div class="time-row-name">Waktu Berhenti</div>
+                            <div class="time-row-value">
+                                <div class="time-value" id="optWaktuBerhenti">0 menit</div>
+                                <div class="time-sub" id="optWaktuBerhentiMnt"></div>
+                            </div>
+                        </div>
+
+                        <div class="time-divider"></div>
+
+                        <div class="time-row time-row-total">
+                            <div class="time-row-name">Total Estimasi</div>
+                            <div class="time-row-value">
+                                <div class="time-value" id="optWaktuKesimpulan">0 menit</div>
+                                <div class="time-sub d-none" id="optWaktuKesimpulanMnt"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btnSimpan" class="btn btn-primary-custom w-100 shadow-sm mt-4">
+                        <i class="bi bi-floppy-fill me-2"></i>Simpan Penugasan
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+<!--Loader Full Screen-->
+<div id="loaderOptimasi" class="loader-fullscreen" style="display: none;">
+    <div class="loader-box">
+        <div class="spinner-border" role="status" style="width: 3.5rem; height: 3.5rem; color: #003366;"></div>
+        <p class="fw-normal loader-text">Memproses Informasi...</p>
+    </div>
+</div>
+
+<!--Modal-->
+<div class="modal fade" id="modalHistoriACO" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" style="max-width: 92%;">
+        <div class="modal-content border-0" style="border-radius:10px;overflow:hidden;border:1px solid #185FA5;">
+            <!-- HEADER -->
+            <div class="modal-header border-0 p-0">
+                <div style="background:#003366;width:100%;padding:16px 20px;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 id="titleHistoryAlgo" class="modal-title mb-1" style="color:#fff;font-weight:500;font-size:15px;">Histori Iterasi ACO</h5>
+                            <small id="subTitleHistoryAlgo" style="color:rgba(255,255,255,0.6);">Monitoring konvergensi dan perubahan solusi</small>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <!-- TAB -->
+                    <div style="background:#fff;border-radius:10px 10px 0px 0px;margin-top:20px;position:relative;">
+                        <div class="d-flex position-relative">
+                            <div id="historyTabIndicator" style="position:absolute;bottom:0;left:0;width:50%;height:2px;background:#003366;transition:all .3s ease;"></div>
+
+                            <!-- ACO -->
+                            <div id="btnTabACO" class="flex-fill text-center" style="padding:14px 10px;cursor:pointer;font-size:13px;font-weight:500; color:#003366;z-index:2; ">
+                                Ant Colony Optimization (ACO)
+                            </div>
+                            <!-- 2OPT -->
+                            <div id="btnTab2Opt" class="flex-fill text-center" style="padding:14px 10px;cursor:pointer;font-size:13px;font-weight:400;color:#777;z-index:2;">
+                                2-Opt First Improvement
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" style="font-size:16px;">
+                        <thead style="background:#fff;">
+                            <tr>
+                                <th class="text-center" style="padding:10px 14px;width:80px;">Iterasi</th>
+                                <th id="s" style="padding:10px 14px;">Swap</th>
+                                <th style="padding:10px 14px;">Jarak Terbaik</th>
+                                <th style="padding:10px 14px;">Waktu</th>
+                                <th style="padding:10px 14px;">Status</th>
+                                <th style="padding:10px 14px;">Rute Terbaik</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHistoryACO">
+                            <tr>
+                                <td colspan="6" class="text-center py-5" style="color:#888;">Belum ada data histori iterasi</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-0" style="background:#fff;border-top:1px solid #b5d4f4 !important;">
+                <button type="button" class="btn btn-sm" style="background:#003366;color:#fff;border:none;border-radius:6px;padding:5px 16px;font-size:12px;" data-bs-dismiss="modal">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--EndModal-->
+@section Scripts {
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+
+    <script>
+        let map;
+        let markers = []; // Array untuk menampung marker objek Mapbox
+
+        let currentValidData = [];
+        let currentInvalidData = [];
+        let isOptimized = false;
+        let optimasiTersimpan = false; // true = hasil optimasi sudah disimpan di server
+
+        let hasilOptimasiGlobal = [];
+        let savedApiOptimasi = null;
+        let savedApiRouting = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const penugasanId = urlParams.get('penugasanId');
+
+        let KANTOR_POS = '';
+        // const KANTOR_POS = { id: 0, nama: "Pusat Operasional", alamat: "Kantor Pusat", lat: -7.053, lng: 108.086 };
+
+        // Fungsi bantuan format waktu
+        function formatDetik(detik) {
+            if (!detik || detik <= 0) return '<span style="white-space: nowrap; color: var(--pos-blue);">0 <span class="fs-6 fw-normal">menit</span></span>';
+            const totalMenit = Math.floor(detik / 60);
+            const sisaDetik = Math.round(detik % 60);
+            const jam = Math.floor(totalMenit / 60);
+            const sisaMenit = totalMenit % 60;
+            const parts = [];
+            if (jam > 0) parts.push(`<span style="white-space: nowrap; color: var(--pos-blue);">${jam} <span class="fs-6 fw-normal">jam</span></span>`);
+            if (sisaMenit > 0) parts.push(`<span style="white-space: nowrap; color: var(--pos-blue);">${sisaMenit} <span class="fs-6 fw-normal">menit</span></span>`);
+            if (sisaDetik > 0) parts.push(`<span style="white-space: nowrap; color: var(--pos-blue);">${sisaDetik} <span class="fs-6 fw-normal">detik</span></span>`);
+            return parts.join(' ');
+        }
+
+        function formatJam(totalMenit) {
+            if (!totalMenit || totalMenit <= 0) return '<span style="white-space: nowrap; color: var(--pos-blue);">0 <span class="fs-6 fw-normal">menit</span></span>';
+            const jam = Math.floor(totalMenit / 60);
+            const menit = Math.round(totalMenit % 60);
+            const parts = [];
+            if (jam > 0) parts.push(`<span style="white-space: nowrap; color: var(--pos-blue);">${jam} <span class="fs-6 fw-normal">jam</span></span>`);
+            if (menit > 0) parts.push(`<span style="white-space: nowrap; color: var(--pos-blue);">${menit} <span class="fs-6 fw-normal">menit</span></span>`);
+            return parts.join(' ');
+        }
+
+        // Fungsi bantuan format jarak: < 1 km tampil "X meter", >= 1 km tampil "X km Y meter" (hanya angka yang bold)
+        function formatJarak(km) {
+            if (!km || km <= 0) return `0 <span class="fw-normal">meter</span>`;
+            const totalMeter = Math.round(km * 1000);
+            if (totalMeter < 1000) return `${totalMeter} <span class="fw-normal">meter</span>`;
+            const kmPart = Math.floor(totalMeter / 1000);
+            const mPart = totalMeter % 1000;
+            if (mPart === 0) return `${kmPart} <span class="fw-normal">km</span>`;
+            return `${kmPart} <span class="fw-normal">km</span> ${mPart} <span class="fw-normal">meter</span>`;
+        }
+
+        $(document).ready(function () {
+
+            $.ajax({
+                url: API_BASE_URL + '/api/lokasi-kantor/getKantor',
+                method: 'GET',
+                success: function (response) {
+                    KANTOR_POS = {
+                        lat: parseFloat(response.latitude),
+                        lng: parseFloat(response.longitude)
+                    };
+
+                    initMap();
+                    detailOptimization();
+                }
+            });
+
+            // 3. LOGIK PINDAH TAB
+            $('.tab-btn').on('click', function () {
+                $('.tab-btn').removeClass('active');
+                $(this).addClass('active');
+
+                const type = $(this).data('type');
+
+                // Sembunyikan semua alert dulu
+                $('#alertRoute, #alertValidInfo, #alertUnoptimized, #alertInvalid').hide();
+
+                if (type === 'route') {
+                    $('#alertRoute').fadeIn(200);
+                    renderOptimizedRouteTable();
+                    $('#btnProses').prop('disabled', false);
+                    return;
+                }
+
+                if (isOptimized) {
+                    if (type === 'valid') {
+                        $('#alertValidInfo').fadeIn(200);
+                        // Tampilkan item yang teroptimasi (punya nomor_urutan) sebagai tabel biasa
+                        const optimizedItems = currentValidData.filter(item => item.nomor_urutan != null);
+                        renderTable(optimizedItems, "valid");
+                        $('#btnProses').prop('disabled', false);
+                    } else if (type === 'unoptimized') {
+                        $('#alertUnoptimized').fadeIn(200);
+                        const itemsWithoutUrutan = currentValidData.filter(item => item.nomor_urutan == null);
+                        renderTable(itemsWithoutUrutan, "valid");
+                        $('#btnProses').prop('disabled', true);
+                    } else {
+                        $('#alertInvalid').fadeIn(200);
+                        renderTable(currentInvalidData, "invalid");
+                        $('#btnProses').prop('disabled', true);
+                    }
+                } else {
+                    if (type === 'valid') {
+                        $('#alertValidInfo').hide();
+                        renderTable(currentValidData, "valid");
+                        $('#btnProses').prop('disabled', currentValidData.length === 0);
+                    } else if (type === 'unoptimized') {
+                        $('#alertUnoptimized').fadeIn(200);
+                        renderTable([], "valid");
+                        $('#btnProses').prop('disabled', true);
+                    } else {
+                        $('#alertInvalid').fadeIn(200);
+                        renderTable(currentInvalidData, "invalid");
+                        $('#btnProses').prop('disabled', true);
+                    }
+                }
+            });
+
+            console.log(currentValidData.length);
+
+            // 4. LOGIK OPTIMASI (API 1 -> API 2 -> RENDER)
+            $('#btnProses').on('click', function () {
+                if (currentValidData.length === 0) return alert("Tidak ada data kiriman untuk dioptimasi!");
+
+                // Optimasi baru (belum disimpan) → tab "Belum Dioptimasi" disembunyikan
+                optimasiTersimpan = false;
+
+                let ant = currentValidData.length;
+                console.log(`Parameter Ant : ${ant}`);
+                const algoritma = $('#jenisAlgoritma').val();
+
+                const btn = $(this);
+                btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Menghitung Rute...').prop('disabled', true);
+
+                // Tampilkan loader full layar
+                $('#loaderOptimasi').fadeIn(200);
+
+                // --- PAYLOAD API 1 ---
+                const payloadOptimasi = {
+                    depotLat: KANTOR_POS.lat,
+                    depotLon: KANTOR_POS.lng,
+                    algoritma: algoritma,
+
+                    ant: ant,
+
+                    pakets: currentValidData.map(item => ({
+                        id: item.paket.id,
+                        lat: item.paket.latitude,
+                        lon: item.paket.longitude
+                    }))
+                };
+
+                $.ajax({
+                    url: API_BASE_URL + '/api/optimization/run',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(payloadOptimasi),
+                    success: function (apiResult) {
+
+                        // untuk modal
+                        // $('#hisAlgo').removeClass('d-none');
+                        console.log('histories');
+                        console.log(apiResult);
+                        renderHistoryACO(apiResult.histories,apiResult.histories2Opt);
+                        console.log('histories');
+                        // end untuk modal
+
+                        const orderedPakets = apiResult.orderedPakets;
+                        const segments = apiResult.segments;
+
+                        // --- PAYLOAD API 2 (Routing) ---
+                        let routeLocations = [{ lat: KANTOR_POS.lat, lon: KANTOR_POS.lng }];
+                        orderedPakets.forEach(opt => {
+                            routeLocations.push({ lat: opt.lat, lon: opt.lon });
+                        });
+                        routeLocations.push({ lat: KANTOR_POS.lat, lon: KANTOR_POS.lng });
+
+                        const payloadRouting = { locations: routeLocations };
+
+                        $.ajax({
+                            url: API_BASE_URL + '/api/optimization/route',
+                            method: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(payloadRouting),
+                            success: function (routeResult) {
+                                $('#loaderOptimasi').fadeOut(200);
+                                renderHasilOptimasi(apiResult, routeResult);
+                            },
+                            error: function (xhr) {
+                                console.error("Error API Routing:", xhr);
+                                $('#loaderOptimasi').fadeOut(200);
+                                alert("Berhasil dioptimasi, tapi gagal mengambil rute jalan. Cek console log.");
+                                btn.html('Mulai Optimasi Rute').prop('disabled', false);
+                            }
+                        });
+                    },
+                    error: function () {
+                        $('#loaderOptimasi').fadeOut(200);
+                        alert("Gagal melakukan optimasi rute.");
+                        btn.html('Mulai Optimasi Rute').prop('disabled', false);
+                    }
+                });
+            });
+
+
+        });
+
+
+        // === TOMBOL TOGGLE GARIS RUTE DI PETA ===
+        let ruteVisible = true; // garis rute asli (biru)
+
+        class RuteToggleControl {
+            onAdd(map) {
+                this._map = map;
+                this._container = document.createElement('div');
+                this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+
+                this._btnRute = this._buatTombol('#0d6efd', 'Sembunyikan garis rute (biru)', () => this.toggleRute());
+
+                this._container.appendChild(this._btnRute);
+                return this._container;
+            }
+            _buatTombol(warna, title, handler) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'rute-toggle-btn';
+                btn.title = title;
+                btn.innerHTML = `<span class="toggle-line" style="background:${warna};"></span>`;
+                btn.addEventListener('click', handler);
+                return btn;
+            }
+            toggleRute() {
+                ruteVisible = !ruteVisible;
+                this._setVisibility('route-layer', ruteVisible);
+                this._btnRute.title = ruteVisible ? 'Sembunyikan garis rute (biru)' : 'Tampilkan garis rute (biru)';
+                this._btnRute.classList.toggle('rute-hidden', !ruteVisible);
+            }
+            _setVisibility(layerId, visible) {
+                if (this._map.getLayer(layerId)) {
+                    this._map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+                }
+            }
+            onRemove() {
+                if (this._container.parentNode) this._container.parentNode.removeChild(this._container);
+            }
+        }
+
+        // === 1. INISIALISASI MAPBOX ===
+        function initMap() {
+            mapboxgl.accessToken = 'apikey';
+            map = new mapboxgl.Map({
+                container: 'map', // ID elemen HTML
+                style: 'mapbox://styles/mapbox/streets-v12', // Tipe peta Mapbox
+                center: [KANTOR_POS.lng, KANTOR_POS.lat], // Set Mapbox selalu [LNG, LAT]
+                zoom: 12
+            });
+
+            // Tambahkan control navigasi (Zoom +/-)
+            map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+            // Tombol tampil/sembunyi garis rute
+            map.addControl(new RuteToggleControl(), 'top-left');
+
+            // Set Marker Awal (Kantor Pos)
+            tambahMarkerMapbox(KANTOR_POS.lng, KANTOR_POS.lat, "<b>KANTOR POS PUSAT</b>", true);
+        }
+
+        function detailOptimization() {
+            const btn = $('#btnSetKurir');
+            const originalText = btn.html();
+
+            btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Memuat...').prop('disabled', true);
+
+            isOptimized = false;
+
+            $.ajax({
+                url: API_BASE_URL + `/api/manajemen-antaran/by-penugasan-id/${penugasanId}`,
+                method: 'GET',
+                success: function (response) {
+                    console.log(response);
+                    console.log("response");
+                    const isOptimized = response.isOptimized == true;
+
+                    // title
+                    $('#idPenugasan').text(response.kode_penugasan);
+                    $('#idnama').text(response.user_nama);
+                    $('#tanggal').text(response.tanggal.split('T')[0]);
+                    $('#total').text(response.total + ' Kiriman');
+
+                    btn.html(originalText).prop('disabled', false);
+
+                    const allData = response.data || [];
+
+                    currentValidData = allData.filter(item => item.paket.latitude !== null && item.paket.longitude !== null);
+                    currentInvalidData = allData.filter(item => item.paket.latitude === null || item.paket.longitude === null);
+
+                    $('#kirimanTabs').show();
+                    $('#countValid').text(currentValidData.length);
+                    $('#countUnoptimized').text(0);
+                    $('#belumdioptimasi').addClass('d-none');
+
+                    $('#countInvalid').text(currentInvalidData.length);
+
+                    $('.tab-btn').removeClass('active');
+                    $('.tab-btn[data-type="valid"]').addClass('active');
+
+                    renderTable(currentValidData, "valid");
+
+
+                    // auto
+                    if (isOptimized) {
+                        // Optimasi tersimpan: tab "Belum Dioptimasi" boleh tampil jika jumlahnya > 0
+                        optimasiTersimpan = true;
+
+                        $('#infoOptimasi').html('<i class="bi bi-check-circle-fill me-1"></i>Rute sudah pernah dioptimasi.').removeClass('text-muted').addClass('text-success');
+
+                        // Tampilkan tab Urutan Pengantaran
+                        $('.tab-btn[data-type="route"]').show();
+
+                        // Update count: hanya item dengan nomor_urutan yang masuk hitungan optimasi
+                        const optimizedCount = currentValidData.filter(item => item.nomor_urutan != null).length;
+                        const unoptimizedCount = currentValidData.filter(item => item.nomor_urutan == null).length;
+                        $('#countRoute').text(optimizedCount);
+                        $('#countValid').text(optimizedCount);
+
+
+                        $('#countUnoptimized').text(unoptimizedCount);
+
+                        // Tampilkan tab "Belum Dioptimasi" hanya jika jumlahnya > 0
+                        if (unoptimizedCount > 0) {
+                            $('#belumdioptimasi').removeClass('d-none');
+                        }
+
+                        $('#countInvalid').text(currentInvalidData.length);
+
+                        // Set route tab sebagai default aktif
+                        $('.tab-btn').removeClass('active');
+                        $('.tab-btn[data-type="route"]').addClass('active');
+
+                        loadSavedOptimization(currentValidData);
+
+                        return;
+                    }
+                    // end auto load
+                    // Belum ada optimasi tersimpan
+                    optimasiTersimpan = false;
+
+                    // Sembunyikan tab route (belum ada optimasi)
+                    $('.tab-btn[data-type="route"]').hide();
+                    $('#alertInvalid').hide();
+
+
+                    if (currentValidData.length > 0) {
+                        $('#metodeRute').prop('disabled', false);
+                        // $('#waktuBerhenti').prop('disabled', false);
+                        $('#btnProses').prop('disabled', false).html('Mulai Optimasi Rute');
+                        $('#infoOptimasi').html('').removeClass('text-danger').addClass('text-muted');
+                    } else {
+                        $('#btnProses').prop('disabled', true);
+                    }
+
+                    $('#hasilOptimasi').hide();
+                    $('#btnSimpan').html('<i class="bi bi-floppy-fill me-2"></i>Simpan Penugasan')
+                        .removeClass('btn-success').addClass('btn-primary-custom')
+                        .prop('disabled', false);
+                },
+                error: function () {
+                    alert("Gagal menarik data paket dari server.");
+                    btn.html(originalText).prop('disabled', false);
+                }
+            });
+        }
+
+
+        function clearMarkersAndRoute() {
+            // Hapus semua marker
+            markers.forEach(m => m.remove());
+            markers = [];
+
+            // Hapus layer rute jika ada
+            if (map.getLayer('route-layer')) {
+                map.removeLayer('route-layer');
+            }
+            if (map.getSource('route-source')) {
+                map.removeSource('route-source');
+            }
+
+        }
+
+        // Fungsi bantuan untuk membuat custom marker di Mapbox
+        function tambahMarkerMapbox(lng, lat, popupHtml, isDepot, urutan = null) {
+            const el = document.createElement('div');
+            el.className = 'custom-mapbox-marker';
+
+            if (isDepot) {
+                el.innerHTML = `<div style="background-color:#1e3a8a; color:white; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:bold; border:2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">P</div>`;
+            } else {
+                el.innerHTML = `<div style="background-color:#FF5A00; color:white; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-weight:bold; border:2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">${urutan || ''}</div>`;
+            }
+
+            const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml);
+
+            const marker = new mapboxgl.Marker(el)
+                .setLngLat([lng, lat])
+                .setPopup(popup)
+                .addTo(map);
+
+            markers.push(marker);
+        }
+
+
+        // LOAD HASIL OPTIMASI TERSIMPAN
+        function loadSavedOptimization(data) {
+
+            // Hanya proses item yang memiliki nomor_urutan (pernah dioptimasi)
+            const validOptimizedData = data.filter(item => item.nomor_urutan != null);
+
+            const orderedData = validOptimizedData
+                .sort((a, b) => a.nomor_urutan - b.nomor_urutan);
+
+            const orderedLocations = orderedData.map(x => ({
+                lat: x.paket.latitude,
+                lon: x.paket.longitude
+            }));
+
+            $.ajax({
+                url: API_BASE_URL + '/api/optimization/calculate',
+                method: 'POST',
+                contentType: 'application/json',
+
+                data: JSON.stringify({
+                    locations: orderedLocations
+                }),
+
+                success: function (calcResult) {
+                    // console.log(calcResult);
+
+                    const orderedPakets = orderedData.map((x, index) => ({
+                        paketId: x.paket.id,
+                        order: index + 1,
+                        lat: x.paket.latitude,
+                        lon: x.paket.longitude
+                    }));
+
+                    const apiOptimasi = {
+                        orderedPakets: orderedPakets,
+                        segments: calcResult.segments,
+                        totalDistance: calcResult.totalDistance,
+                        totalDuration: calcResult.totalDuration
+                    };
+
+                    const apiRouting = {
+                        polylines: calcResult.polylines
+                    };
+
+                    renderHasilOptimasi(apiOptimasi, apiRouting);
+                },
+
+                error: function (xhr) {
+                    console.log(xhr);
+                    alert("Gagal load optimasi tersimpan!");
+                }
+            });
+        }
+
+
+
+
+        // === 2. FUNGSI RENDER TABEL SEBELUM OPTIMASI ===
+        function renderTable(dataArray, type) {
+            $('#tableTitle').html('<i class="bi bi-box-seam me-2" style="color: var(--pos-orange);"></i> Daftar Kiriman');
+            $('#theadKiriman').html(`
+                                <tr>
+                                    <th style="width: 50px;" class="text-center">No</th>
+                                    <th>No Kiriman</th>
+                                    <th>Penerima</th>
+                                    <th>No Telp</th>
+                                    <th>Alamat</th>
+                                </tr>
+                            `);
+
+            const tbody = $('#tbodyKiriman').empty();
+            clearMarkersAndRoute();
+
+            if (dataArray.length === 0) {
+                tbody.append(`<tr><td colspan="5" class="text-center py-4 text-muted">Tidak ada data di kategori ini.</td></tr>`);
+                map.flyTo({ center: [KANTOR_POS.lng, KANTOR_POS.lat], zoom: 12 });
+                tambahMarkerMapbox(KANTOR_POS.lng, KANTOR_POS.lat, "<b>KANTOR POS </b>", true);
+                return;
+            }
+
+            // Depot
+            tambahMarkerMapbox(KANTOR_POS.lng, KANTOR_POS.lat, "<b>KANTOR POS </b>", true);
+            let bounds = new mapboxgl.LngLatBounds();
+            bounds.extend([KANTOR_POS.lng, KANTOR_POS.lat]);
+
+            dataArray.forEach((item, index) => {
+                const p = item.paket;
+                let badgeWarning = type === 'invalid' ? `<div class="mt-1"><span class="badge bg-danger" style="font-size: 0.65rem;">Koordinat Tidak Tersedia</span></div>` : '';
+
+                tbody.append(`
+                                    <tr class="table-row-text">
+                                        <td class="text-center text-muted fw-bold">${index + 1}</td>
+                                        <td><span class="fw-bold" >${p.no_kiriman}</span></td>
+                                        <td>${p.recipient_name} ${badgeWarning}</td>
+                                        <td class="text-muted" style="white-space: nowrap;">${p.telepon|| '-'}</td>
+                                        <td class="text-muted">${p.address}</td>
+                                    </tr>
+                                `);
+
+                if (type === 'valid') {
+                    tambahMarkerMapbox(p.longitude, p.latitude, `<b>${p.no_kiriman}</b><br>${p.recipient_name}`, false, index + 1);
+                    bounds.extend([p.longitude, p.latitude]);
+                }
+            });
+
+            if (type === 'valid') {
+                map.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+            } else {
+                map.flyTo({ center: [KANTOR_POS.lng, KANTOR_POS.lat], zoom: 12 });
+            }
+        }
+
+        // === FUNGSI RENDER ULANG TABEL OPTIMASI (untuk tab switching) ===
+        function renderOptimizedRouteTable() {
+            const apiOptimasi = savedApiOptimasi;
+            const apiRouting = savedApiRouting;
+            if (!apiOptimasi || !apiRouting) return;
+
+            const dictPaket = {};
+            currentValidData.forEach(item => { dictPaket[item.paket.id] = item.paket; });
+
+            const orderedPakets = apiOptimasi.orderedPakets;
+            const segments = apiOptimasi.segments;
+
+            $('#tableTitle').html('<i class="bi bi-signpost-split-fill me-2" style="color: var(--pos-orange);"></i> Urutan Pengantaran ');
+
+            $('#theadKiriman').html(`
+                    <tr>
+                        <th style="width: 50px;" class="text-center">Urutan</th>
+                        <th>No Kiriman</th>
+                        <th>Tujuan</th>
+                        <th class="">Jarak</th>
+                                <th class="">Estimasi Waktu</th>
+                    </tr>
+                `);
+
+            const tbody = $('#tbodyKiriman').empty();
+            clearMarkersAndRoute();
+
+            let bounds = new mapboxgl.LngLatBounds();
+
+            tambahMarkerMapbox(KANTOR_POS.lng, KANTOR_POS.lat, "<b>KANTOR POS PUSAT</b>", true);
+            bounds.extend([KANTOR_POS.lng, KANTOR_POS.lat]);
+
+            tbody.append(`
+                    <tr class="table-row-text bg-light">
+                        <td class="text-center"><span class="badge bg-primary">START</span></td>
+                        <td><span class="fw-bold" style="color: var(--pos-blue);">KANTOR</span></td>
+                        <td><div>-</div></td>
+                        <td class=" align-middle"><span class="text-muted">-</span></td>
+                        <td class="text-end align-middle"><span class="text-muted">-</span></td>
+                    </tr>
+                `);
+
+            orderedPakets.forEach((opt, index) => {
+                const pDetail = dictPaket[opt.paketId];
+                const urutan = opt.order;
+                const seg = segments[index];
+
+                tambahMarkerMapbox(opt.lon, opt.lat, `<b>Urutan ${urutan}</b><br>${pDetail.no_kiriman}<br>${pDetail.recipient_name}`, false, urutan);
+                bounds.extend([opt.lon, opt.lat]);
+
+                let distHtml = '<span class="text-muted">-</span>';
+                let timeHtml = '<span class="text-muted">-</span>';
+                if (seg) {
+                    let travelTimeFormatted = formatDetik(seg.duration);
+                    let teksDari = index === 0 ? "Kantor Pos" : `Titik ${index}`;
+                    distHtml = `<div class="text-muted" style="font-size: 0.7rem;white-space: nowrap;">dari ${teksDari}</div><div class="fw-bold" style="color: var(--text-main);white-space: nowrap;">${formatJarak(seg.distance)}</div>`;
+                    timeHtml = `<div class="text-muted" style="font-size: 0.7rem;white-space: nowrap;">dari ${teksDari}</div><div class="fw-bold" style="color: var(--pos-orange);white-space: nowrap;">${travelTimeFormatted}</div>`;
+                }
+
+                tbody.append(`
+                        <tr class="table-row-text">
+                            <td class="text-center"><span class="seq-number shadow-sm">${urutan}</span></td>
+                            <td><span class="fw-bold" >${pDetail.no_kiriman}</span></td>
+                            <td class="">
+                                <div>${pDetail.recipient_name}</div>
+                                <div class="text-muted" style="font-size:0.75rem;">${pDetail.address}</div>
+                                <div class="text-muted" style="font-size:0.75rem;white-space: nowrap;">${pDetail.telepon|| '-'}</div>
+                            </td>
+                            <td class=" align-middle">${distHtml}</td>
+                            <td class="align-middle">${timeHtml}</td>
+                        </tr>
+                    `);
+            });
+
+            const lastSeg = segments[segments.length - 1];
+            let lastDist = lastSeg ? formatJarak(lastSeg.distance) : '0 m';
+            let lastTimeFormatted = lastSeg ? formatDetik(lastSeg.duration) : '0 menit';
+            tbody.append(`
+                    <tr class="table-row-text bg-light">
+                        <td class="text-center"><span class="badge bg-secondary">FINISH</span></td>
+                        <td><span class="fw-bold" style="color: var(--pos-blue);">KANTOR POS</span></td>
+                        <td><div>-</div></td>
+                        <td class="align-middle">
+                                    <div class="text-muted" style="font-size: 0.7rem;white-space: nowrap;">dari Titik ${orderedPakets.length}</div>
+                                    <div class="fw-bold" style="color: var(--text-main);white-space: nowrap;">${lastDist}</div>
+                        </td>
+                        <td class="align-middle">
+                                    <div class="text-muted" style="font-size: 0.7rem;white-space: nowrap;">dari Titik ${orderedPakets.length}</div>
+                                    <div class="fw-bold" style="color: var(--pos-orange);white-space: nowrap;">${lastTimeFormatted}</div>
+                        </td>
+                    </tr>
+                `);
+
+            // Gambar polyline rute (biru) jika berhasil decode
+            let features = [];
+            let berhasilDecode = false;
+
+            let routingData = apiRouting;
+            if (typeof routingData === 'string') {
+                try { routingData = JSON.parse(routingData); } catch (e) { console.error("Gagal parse", e); }
+            }
+
+            if (routingData && (routingData.routes || routingData.polylines)) {
+                const routeList = routingData.routes || routingData.polylines;
+                routeList.forEach((route, idx) => {
+                    let polylineString = null;
+                    if (typeof route === 'string') {
+                        polylineString = route;
+                    } else {
+                        polylineString = route.polyline || route.geometry || (route.overview_polyline ? route.overview_polyline.points : null);
+                    }
+                    if (polylineString && typeof polylineString === 'string') {
+                        const decodedPath = decodePolyline(polylineString, 6);
+                        if (decodedPath.length > 0) {
+                            berhasilDecode = true;
+                            features.push({
+                                'type': 'Feature',
+                                'properties': { 'segment': idx },
+                                'geometry': {
+                                    'type': 'LineString',
+                                    'coordinates': decodedPath
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Lapisan rute asli (biru) — hanya jika polyline berhasil diproses
+            if (berhasilDecode) {
+                map.addSource('route-source', {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'FeatureCollection',
+                        'features': features
+                    }
+                });
+                map.addLayer({
+                    'id': 'route-layer',
+                    'type': 'line',
+                    'source': 'route-source',
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#0d6efd',
+                        'line-width': 5,
+                        'line-opacity': 0.85
+                    }
+                });
+
+                // Jika garis rute sedang disembunyikan, pertahankan statusnya
+                if (!ruteVisible) {
+                    map.setLayoutProperty('route-layer', 'visibility', 'none');
+                }
+            } else {
+                console.warn("Polyline asli gagal diproses; hanya garis lurus antar titik (merah) yang digambar.");
+            }
+
+            map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
+        }
+
+        // === 3. FUNGSI RENDER HASIL OPTIMASI ===
+        function renderHasilOptimasi(apiOptimasi, apiRouting) {
+            const dictPaket = {};
+            currentValidData.forEach(item => { dictPaket[item.paket.id] = item.paket; });
+
+            const orderedPakets = apiOptimasi.orderedPakets;
+
+            hasilOptimasiGlobal = orderedPakets;
+
+            const segments = apiOptimasi.segments || [];
+            const waktuBerhenti = 5;
+            const totalJarak = segments.length
+                ? segments.reduce((total, segment) => total + Number(segment.distance || 0), 0)
+                : Number(apiOptimasi.totalDistance || 0);
+            const totalDurasiDetik = segments.length
+                ? segments.reduce((total, segment) => total + Number(segment.duration || 0), 0)
+                : Number(apiOptimasi.totalDuration || 0);
+
+            // Tampilkan tabs - route tab jadi default
+            $('#kirimanTabs').show();
+            $('.tab-btn[data-type="route"]').show();
+            $('.tab-btn').removeClass('active');
+            $('.tab-btn[data-type="route"]').addClass('active');
+            // Hitung ulang: items dengan koordinat tapi tanpa nomor_urutan masuk ke tab unoptimized
+            const unoptimizedWithCoords = currentValidData.filter(item => item.nomor_urutan == null).length;
+            const optimizedCount = orderedPakets.length;
+            $('#countRoute').text(optimizedCount);
+            $('#countValid').text(optimizedCount);
+            $('#countUnoptimized').text(unoptimizedWithCoords);
+
+            // Tampilkan tab "Belum Dioptimasi" HANYA jika optimasi sudah tersimpan & jumlahnya > 0
+            if (optimasiTersimpan && unoptimizedWithCoords > 0) {
+                $('#belumdioptimasi').removeClass('d-none');
+            } else {
+                $('#belumdioptimasi').addClass('d-none');
+            }
+
+            $('#countInvalid').text(currentInvalidData.length);
+
+            // Simpan data optimasi untuk tab switching
+            savedApiOptimasi = apiOptimasi;
+            savedApiRouting = apiRouting;
+
+            $('#alertInvalid, #alertValidInfo, #alertUnoptimized').hide();
+            $('#alertRoute').fadeIn(200);
+
+            // Render tabel + map optimasi (untuk tab route)
+            renderOptimizedRouteTable();
+
+
+            let totalTravelTimeMins = Math.round(totalDurasiDetik / 60);
+            let totalTravelTimeFormatted = formatJam(totalTravelTimeMins);
+
+            let totalStopTimeMins = orderedPakets.length * waktuBerhenti;
+            let totalAllTime = totalTravelTimeMins + totalStopTimeMins;
+            // 1. Hitung total menit keseluruhan
+            let totalMenit = totalTravelTimeMins + totalStopTimeMins;
+            let totalAllTimeFormatted = formatJam(totalMenit);
+
+            $('#hasilOptimasi').fadeIn(400);
+            $('#optCount').text(orderedPakets.length);
+
+            let totalStopTimeFormatted = formatJam(totalStopTimeMins);
+            let stopTimeDetail = `<span style="white-space: nowrap;">(${orderedPakets.length} titik \u00d7 ${waktuBerhenti} menit = ${totalStopTimeMins} menit)</span>`;
+
+            $('#optWaktuJalan').html(`${totalTravelTimeFormatted}`);
+            $('#optWaktuJalanJam').html(`<span style="white-space: nowrap; ">(${totalTravelTimeMins} <span class="fs-6 fw-normal">menit</span></span>)`);
+
+            // === TAMPILAN: duplikat nilai Waktu Perjalanan untuk baris Rincian Waktu ===
+            $('#optWaktuJalan2').html(totalTravelTimeFormatted);
+            $('#optWaktuJalanJam2').html(`<span style="white-space: nowrap; ">(${totalTravelTimeMins} <span class="fs-6 fw-normal">menit</span></span>)`);
+
+
+            $('#optWaktuBerhenti').html(`${totalStopTimeFormatted}`);
+            $('#optWaktuBerhentiMnt').html(stopTimeDetail);
+            $('#optJarakKesimpulan2').html(formatJarak(totalJarak));
+            $('#optWaktuKesimpulanMnt').html(`(<span style="white-space: nowrap; ">${totalAllTime} <span class="fs-6 fw-normal">menit</span></span>)`);
+            $('#optWaktuKesimpulan').html(`${totalAllTimeFormatted}`);
+
+            isOptimized = true;
+
+            $('#btnProses').prop('disabled', false).html(`<i class="bi bi-arrow-repeat me-1"></i>Optimasi Ulang`);
+            $('#btnSimpan').html('<i class="bi bi-floppy-fill me-2"></i>Simpan Optimasi').removeClass('btn-success').addClass('btn-primary-custom').prop('disabled', false);
+
+            // Scroll ke kartu hasil optimasi di kolom kanan
+            $('html, body').animate({ scrollTop: $("#hasilOptimasi").offset().top - 20 }, 600);
+        }
+
+        $('#btnSimpan').on('click', function () {
+
+            if (hasilOptimasiGlobal.length === 0) {
+                alert("Data optimasi belum ada!");
+                return;
+            }
+
+            const btn = $(this);
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...');
+
+            // ambil urutan paket hasil optimasi
+            const paketIds = hasilOptimasiGlobal.map(x => x.paketId);
+
+            const payload = {
+                jadwalId: parseInt(penugasanId),
+                paketIds: paketIds
+            };
+
+            console.log(payload);
+
+            $.ajax({
+                url: API_BASE_URL + '/api/optimization/save-urutan',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+
+                success: function (response) {
+                    console.log(response);
+                    alert("Optimasi berhasil disimpan!");
+                    location.href = "/Penugasan/OptimasiPengantaran";
+                    btn.html('<i class="bi bi-check-circle-fill me-2"></i>Berhasil Disimpan').removeClass('btn-primary-custom').addClass('btn-success');
+                },
+
+                error: function (xhr) {
+                    console.log(xhr);
+                    alert("Gagal menyimpan urutan!");
+                    btn.prop('disabled', false).html('<i class="bi bi-floppy-fill me-2"></i>Simpan Penugasan');
+                }
+            });
+
+        });
+
+
+        // === FUNGSI DECODE GOOGLE POLYLINE (KHUSUS MAPBOX [LNG, LAT]) ===
+        function decodePolyline(str, precision) {
+            var index = 0, lat = 0, lng = 0, coordinates = [], shift = 0, result = 0, byte = null, latitude_change, longitude_change, factor = Math.pow(10, Number.isInteger(precision) ? precision : 5);
+            while (index < str.length) {
+                byte = null; shift = 0; result = 0;
+                do {
+                    byte = str.charCodeAt(index++) - 63;
+                    result |= (byte & 0x1f) << shift;
+                    shift += 5;
+                } while (byte >= 0x20);
+                latitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                shift = result = 0;
+                do {
+                    byte = str.charCodeAt(index++) - 63;
+                    result |= (byte & 0x1f) << shift;
+                    shift += 5;
+                } while (byte >= 0x20);
+                longitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lat += latitude_change;
+                lng += longitude_change;
+
+                // Mapbox HARUS memakai format array [Longitude, Latitude]
+                coordinates.push([lng / factor, lat / factor]);
+            }
+            return coordinates;
+        }
+
+
+    </script>
+
+
+
+
+
+    <!--Untuk modal-->
+    <script>
+        function renderHistoryACO(historiesACO,histories2Opt) {
+            let currentType = 'aco';
+
+            function renderTable(type) {
+                const tbody = $('#tbodyHistoryACO');
+                tbody.empty();
+
+                let histories = [];
+                /* SELECT TYPE*/
+                if (type === 'aco') {
+                    histories = historiesACO || [];
+                    $('#titleHistoryAlgo').text('Histori Iterasi Ant Colony Optimization (ACO)');
+                    $('#subTitleHistoryAlgo').text('Monitoring konvergensi dan perubahan solusi ACO');
+
+                    /* ACTIVE TAB*/
+                    $('#btnTabACO').addClass('active-history');
+                    $('#btnTab2Opt').removeClass('active-history');
+
+                    /* HIDE SWAP*/
+                    $('#s').addClass('d-none');
+                }
+                else {
+                    histories = histories2Opt || [];
+                    $('#titleHistoryAlgo').text('Histori Iterasi 2-Opt First Improvement');
+                    $('#subTitleHistoryAlgo').text('Monitoring local search');
+
+                    /* ACTIVE TAB*/
+                    $('#btnTab2Opt').addClass('active-history');
+                    $('#btnTabACO').removeClass('active-history');
+
+                    /* SHOW SWAP*/
+                    $('#s').removeClass('d-none');
+                }
+
+                /* EMPTY*/
+                if (!histories || histories.length === 0) {
+                    let textEmpty =
+                        type === 'aco'
+                            ? 'Tidak ada histori ACO'
+                            // : '2-Opt tidak dijalankan pada optimasi ini';
+                            : 'Tidak ada perbaikan solusi';
+
+                    tbody.append(`
+                        <tr>
+                            <td colspan="${type === 'aco' ? 5 : 6}"
+                                class="text-center py-5"
+                                style="color:#888;">
+
+                                ${textEmpty}
+
+                            </td>
+                        </tr>
+                    `);
+                    return;
+                }
+
+
+                let bestDistance = Math.min(
+                    ...histories.map(x => x.bestDistance)
+                );
+                /* LOOP*/
+                let previousDistance = null;
+                histories.forEach((item) => {
+
+                    const isBest = item.bestDistance === bestDistance;
+
+                    let statusHtml = isBest
+                        ? `
+                    <span class="badge"style="background:#DBEAFE;color:#003366;border:1px solid #93C5FD;font-size:11px;font-weight:600;padding:6px 10px;">
+                        Jarak Terpendek
+                    </span>
+                `
+                        : `
+                    <span class=""
+                          style="font-size:11px;font-weight:500;">
+                        -
+                    </span>
+                `;
+
+                    const routeText = item.bestRoute.join(' → ');
+                    const durationMinutes = Math.round(item.bestDuration / 60);
+
+                    let swapHtml = '-';
+
+                    if (item.swapValue) {
+                        swapHtml = `
+                    <span class="badge"
+                          style="background:#EFF6FF;color:#185FA5;border:1px solid #BFDBFE;font-size:11px;font-weight:500;padding:6px 10px;">
+                        ${item.swapValue}
+                    </span>
+                `;
+                    }
+
+                    tbody.append(`
+
+                        <tr style="${isBest ? 'background:rgba(27,44,89,0.06);' : ''}">
+
+                            <td class="text-center fw-normal">
+                                ${item.iteration}
+                            </td>
+
+                            <td class="s2 ${type === 'aco' ? 'd-none' : ''}">
+                                ${swapHtml}
+                            </td>
+
+                            <td>
+                                <div class="fw-normal">
+                                    ${item.bestDistance.toFixed(3)} km
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="fw-normal">
+                                    ${durationMinutes} menit
+                                </div>
+                            </td>
+
+                            <td>
+                                ${statusHtml}
+                            </td>
+
+                            <td style="min-width:300px;">
+                                <div style=" font-size:.8rem; white-space:normal; line-height:1.6; ">
+                                    ${routeText}
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                });
+
+            };
+
+            /* BUTTON TAB*/
+            $('#btnTabACO').off('click').on('click', function () {
+                renderTable('aco');
+            });
+
+            $('#btnTab2Opt').off('click').on('click', function () {
+                renderTable('2opt');
+            });
+
+            /* DEFAULT*/
+            renderTable('aco');
+        }
+
+
+    </script>
+
+
+    <!--Untuk modal-->
+}

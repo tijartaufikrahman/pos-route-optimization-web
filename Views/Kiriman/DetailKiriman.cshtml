@@ -1,0 +1,335 @@
+@{
+    ViewData["Title"] = "Detail Kiriman";
+    var tanggal = ViewBag.Tanggal as string ?? "";
+}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqkyOYHvgAZt-mpcn3V_14KoSJJ3Hr4MM&libraries=places" async defer></script>
+
+<main>
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb-bar">
+        <a href="/kiriman"><i class="bi bi-box-seam-fill"></i> Data Kiriman</a>
+        <span class="sep">/</span>
+        <span class="current">Detail</span>
+    </div>
+
+    <!-- INFO BOX -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body px-3 pb-3 pt-3">
+                    <span class="card-title-section">Informasi Kiriman</span>
+                    <hr class="mt-2 mb-3">
+                    <div class="row g-3">
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-muted small d-block">Tanggal</span>
+                            <span class="fw-semibold text-dark" id="infoTanggal">@(tanggal != "" ? tanggal : DateTime.Now.ToString("dd MMM yyyy"))</span>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <span class="text-muted small d-block">Jumlah Kiriman</span>
+                            <span class="fw-bold" style="color: var(--pos-blue); font-size: 1.1rem;" id="infoJumlahKiriman">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABEL DETAIL -->
+    <div class="row">
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-body px-3 pb-4 pt-3">
+                    <div class="mb-3">
+                        <span class="card-title-section">Data Kiriman</span>
+                    </div>
+                    <hr class="mt-2 mb-3">
+                    <div class="table-responsive p-0">
+                    <table id="detailTable" class="mt-2 table table-hover table-bordered w-100 mb-0" style="min-width: 950px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" width="50">No</th>
+                                <th class="text-center">Nomor Kiriman</th>
+                                <th>Jenis Layanan</th>
+                                <th class="text-center">Berat (KG)</th>
+                                <th class="text-center">Jenis Kiriman</th>
+                                <th class="text-center">Nama Penerima</th>
+                                <th class="text-center">Telepon Penerima</th>
+                                <th class="text-center" style="width:30%;">Alamat Penerima</th>
+                                <th class="text-center" style="width:10%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL IMPORT KIRIMAN -->
+<div class="modal fade" id="paketModal" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <span class="fw-semibold"><i class="bi bi-file-earmark-excel text-primary me-1"></i> Import Data Kiriman</span>
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4 pt-3">
+                <div class="text-center mb-4">
+                    <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:72px;height:72px;">
+                        <i class="bi bi-cloud-arrow-up" style="font-size:1.8rem; color: var(--pos-blue);"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-1">Upload File Excel</h6>
+                    <p class="text-muted small mb-0">Import kiriman dari file Excel (.xlsx)</p>
+                </div>
+
+                <div class="upload-drop-zone rounded-4 p-5 text-center mb-2">
+                    <input type="file" accept=".xlsx" id="fileExcel">
+                    <div class="upload-icon mb-3">
+                        <i class="bi bi-cloud-arrow-up-fill opacity-75" style="font-size: 3.5rem; color: var(--pos-blue);"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-dark">Klik atau drag &amp; drop file di sini</h6>
+                    <p class="text-muted small mb-0">Format yang didukung: <b>.xlsx</b></p>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <button type="button" class="btn text-secondary fw-medium px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" id="btnMulaiUpload" class="btn btn-pos px-4 btn-pill fw-semibold shadow-sm d-flex align-items-center gap-2">
+                        Preview Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PREVIEW EXCEL -->
+<div class="modal fade" id="previewModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 bg-white rounded-top-4 pb-3 pt-4 px-4">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-table text-primary"></i> Preview Data Kiriman
+                    </h5>
+                    <p class="mb-0 text-muted small mt-1">Pastikan data berikut sudah sesuai standar format sebelum disimpan.</p>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="loadingPreview" class="text-center py-5 text-muted fw-medium" style="display:none;">
+                    <span class="spinner-border spinner-border-sm me-2 text-primary" role="status"></span> Membaca file Excel...
+                </div>
+                <div class="mt-2 table-responsive px-4 pb-3" id="tablePreviewContainer">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="sticky-top table-light">
+                            <tr>
+                                <th class="text-center">No</th>
+                                <th>Nomor Kiriman</th>
+                                <th>Jenis Layanan</th>
+                                <th>Nama Penerima</th>
+                                <th>Alamat Lengkap</th>
+                                <th>Telepon</th>
+                                <th>Jenis Kiriman</th>
+                                <th>Berat (Kg)</th>
+                                <th class="d-none">Koordinat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBodyPreview"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary fw-medium px-4 rounded-pill" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-pos fw-semibold px-4 rounded-pill d-flex align-items-center gap-2" id="btnSimpanExcelDB">
+                    <i class="bi bi-check-circle-fill"></i> Simpan Data Kiriman
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL MAP -->
+<div class="modal fade" id="mapModal" tabindex="-1" data-bs-focus="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header text-white" style="background: var(--pos-blue);">
+                <h5 class="modal-title fw-semibold"><i class="bi bi-geo-alt-fill me-2"></i>Pilih Titik Koordinat</h5>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col">
+                                <input type="text" class="form-control shadow-none" id="searchInput" placeholder="Cari alamat atau lokasi...">
+                            </div>
+                            <div class="col-lg-3">
+                                <button class="btn w-100 text-white shadow-none" style="background: var(--pos-blue);" id="btnGeocoding">Cari</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="map" class="rounded border" style="height:450px;"></div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Latitude</label>
+                        <input type="text" class="form-control shadow-none" id="latitude" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">Longitude</label>
+                        <input type="text" class="form-control shadow-none" id="longitude" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                <button class="btn text-white" style="background: var(--pos-blue);" id="btnSaveLocation">Gunakan Lokasi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var filterTanggal = '@tanggal';
+
+    $(document).ready(function () {
+        var detailTable = $('#detailTable').DataTable({
+            columnDefs: [
+                { targets: "_all", className: "text-center" }
+            ],
+            columns: [
+                { data: null, render: (d, t, r, m) => m.row + 1 },
+                { data: 'no_kiriman', className: 'fw-bold' },
+                { data: 'service' },
+                { data: 'berat_kiriman' },
+                { data: 'kriteria' },
+                { data: 'recipient_name' },
+                { data: 'telepon_penerima' },
+                { data: 'address' },
+                {
+                    data: 'status',
+                    render: (data) => {
+                        let badge = '';
+                        if (data === 'Manifested') {
+                            badge = '<span class="badge badge-blue">Manifested</span>';
+                        } else if (data === 'on_delivery') {
+                            badge = '<span class="badge badge-yellow">Diantar</span>';
+                        } else if (data === 'delivered' || data === 'Selesai') {
+                            badge = '<span class="badge badge-green">Selesai</span>';
+                        } else {
+                            badge = '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle">' + (data || '-') + '</span>';
+                        }
+                        return badge;
+                    }
+                }
+            ]
+        });
+
+        function loadDetail() {
+            var url = API_BASE_URL + '/api/paket/list-kiriman';
+            if (filterTanggal) {
+                url += '?tanggal=' + filterTanggal;
+            }
+
+            $.get(url)
+                .done(function (res) {
+                    let data = res.data ? res.data : res;
+                    if (Array.isArray(data)) {
+                        detailTable.clear();
+                        detailTable.rows.add(data);
+                        detailTable.draw();
+                        detailTable.columns.adjust();
+                        $('#infoJumlahKiriman').text(data.length);
+                    } else {
+                        detailTable.clear().draw();
+                    }
+                })
+                .fail(function (err) {
+                    console.error("Gagal load data", err);
+                    alert("Koneksi ke API gagal.");
+                });
+        }
+
+        loadDetail();
+    });
+</script>
+
+<!-- MAP SCRIPT -->
+<script>
+    let map, marker, geocoder, placesService;
+    const defaultLocation = { lat: -7.0602586000, lng: 108.0876617000 };
+
+    $('#btnMap').click(function () {
+        new bootstrap.Modal(document.getElementById('mapModal')).show();
+        setTimeout(() => {
+            if (!map) {
+                $.ajax({
+                    url: API_BASE_URL + "/api/lokasi-kantor/getKantor",
+                    type: 'GET',
+                    success: function (data) {
+                        if (data && data.latitude && data.longitude) {
+                            defaultLocation.lat = data.latitude;
+                            defaultLocation.lng = data.longitude;
+                        } else {
+                            defaultLocation.lat = 0; defaultLocation.lng = 0;
+                        }
+                        initMap();
+                        if (!data || !data.latitude || !data.longitude) {
+                            map.setZoom(2);
+                        }
+                    },
+                    error: function () {
+                        defaultLocation.lat = 0; defaultLocation.lng = 0;
+                        initMap();
+                        map.setZoom(2);
+                    }
+                });
+            } else {
+                google.maps.event.trigger(map, 'resize');
+                map.setCenter(marker.getPosition());
+            }
+        }, 500);
+    });
+
+    function initMap() {
+        geocoder = new google.maps.Geocoder();
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: defaultLocation, zoom: 15,
+            mapTypeControl: false, streetViewControl: false, fullscreenControl: false
+        });
+        placesService = new google.maps.places.PlacesService(map);
+        marker = new google.maps.Marker({ position: defaultLocation, map: map, draggable: true });
+        $("#latitude").val(defaultLocation.lat);
+        $("#longitude").val(defaultLocation.lng);
+        map.addListener("click", function (event) {
+            marker.setPosition(event.latLng);
+            $("#latitude").val(event.latLng.lat());
+            $("#longitude").val(event.latLng.lng());
+        });
+        marker.addListener("dragend", function (event) {
+            $("#latitude").val(event.latLng.lat());
+            $("#longitude").val(event.latLng.lng());
+        });
+    }
+
+    $("#btnGeocoding").on("click", function () {
+        const address = $("#searchInput").val();
+        if (!address) { alert("Masukkan alamat terlebih dahulu"); return; }
+        geocoder.geocode({ address: address }, function (results, status) {
+            if (status === "OK") {
+                const location = results[0].geometry.location;
+                map.setCenter(location); map.setZoom(17); marker.setPosition(location);
+                $("#latitude").val(location.lat()); $("#longitude").val(location.lng());
+            } else { alert("Geocoding gagal: " + status); }
+        });
+    });
+
+    $("#btnSaveLocation").on("click", function () {
+        $("#koordinat").val($("#latitude").val() + ", " + $("#longitude").val());
+        bootstrap.Modal.getInstance(document.getElementById("mapModal")).hide();
+    });
+</script>

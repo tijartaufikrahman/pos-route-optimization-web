@@ -1,0 +1,579 @@
+@{
+    ViewData["Title"] = "Testing Rute";
+}
+
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css">
+
+<style>
+    #manualRouteMap {
+        height: calc(100vh - 210px);
+        min-height: 640px;
+        width: 100%;
+        border-radius: 0 0 var(--pos-radius) var(--pos-radius);
+    }
+
+    @@media (max-width: 991.98px) {
+        #manualRouteMap {
+            height: 70vh;
+            min-height: 520px;
+        }
+    }
+
+    .manual-marker {
+        width: 30px;
+        height: 30px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, .35);
+        background: var(--pos-orange);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .72rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .manual-marker.selected {
+        background: var(--pos-orange);
+    }
+
+    .manual-marker.swap-pending {
+        background: #dc3545;
+    }
+
+    .manual-map-legend {
+        position: absolute;
+        left: 12px;
+        bottom: 12px;
+        z-index: 2;
+        background: rgba(255, 255, 255, .94);
+        border: 1px solid var(--pos-border);
+        border-radius: 6px;
+        padding: .45rem .65rem;
+        color: #000;
+        font-size: .75rem;
+    }
+
+    .manual-list-item {
+        border: 1px solid var(--pos-border);
+        border-radius: 6px;
+        background: #fff;
+    }
+
+    .manual-list-item .route-index {
+        min-width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background: var(--pos-blue);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .72rem;
+        font-weight: 600;
+    }
+
+    .route-action {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+    }
+</style>
+
+<main>
+    <div class="breadcrumb-bar">
+        <span class="current"><i class="bi bi-bezier2"></i> Testing Rute</span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-3">
+                <div class="px-3 pb-3 pt-3 border-bottom">
+                    <span class="card-title-section">Sumber Urutan</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="filter-label" for="filterMode">Tampilkan berdasarkan</label>
+                            <select id="filterMode" class="form-select form-control-modern shadow-none">
+                                <option value="manual">Pilih titik manual</option>
+                                <option value="pod">Urutan waktu POD</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="filter-label" for="filterTanggalPod">Tanggal POD</label>
+                            <input type="date" id="filterTanggalPod" value="2025-09-04" class="form-control form-control-modern shadow-none" disabled>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" id="btnTerapkanFilter" class="btn btn-pos w-100 justify-content-center">
+                                <i class="bi bi-funnel me-1"></i> Terapkan Filter
+                            </button>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2" id="podFilterInfo"></small>
+                </div>
+            </div>
+            <div class="card shadow-sm h-100">
+                <div class="px-3 pb-3 pt-3 border-bottom">
+                    <span class="card-title-section">Sebaran Titik Kiriman</span>
+                </div>
+                <div class="position-relative">
+                    <div id="manualRouteMap"></div>
+                    <div class="manual-map-legend">Klik titik untuk memilih. Klik dua titik bernomor untuk menukar urutan.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="d-flex justify-content-between align-items-center px-3 pb-3 pt-3 border-bottom">
+                    <span class="card-title-section">Urutan Pengantaran</span>
+                    <span class="badge badge-blue" id="selectedCount">0 titik</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <button type="button" id="btnHitungRute" class="btn btn-pos btn-sm w-100 justify-content-center" disabled>
+                                <i class="bi bi-bezier2 me-1"></i> Hitung Rute
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" id="btnResetRute" class="btn btn-light border btn-sm w-100">
+                                Reset Pilihan
+                            </button>
+                        </div>
+                        <div class="col-12">
+                            <button type="button" id="btnHitungAlgoritma" class="btn btn-light border btn-sm w-100" disabled>
+                                <i class="bi bi-diagram-3 me-1"></i> Hitung Rute dengan Algoritma
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" id="btnToggleStraight" class="btn btn-light border btn-sm w-100" disabled>
+                                <i class="bi bi-dash-lg me-1"></i> Garis Lurus
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" id="btnTogglePolyline" class="btn btn-light border btn-sm w-100" disabled>
+                                <i class="bi bi-bezier2 me-1"></i> Polyline Rute
+                            </button>
+                        </div>
+                    </div>
+                    <div id="selectedList" class="d-flex flex-column gap-2" style="max-height: 380px; overflow-y: auto;">
+                        <span class="text-muted small">Belum ada kiriman yang dipilih.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="px-3 pb-3 pt-3 border-bottom">
+                    <span class="card-title-section">Hasil Perhitungan</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center pb-2 border-bottom">
+                        <span class="text-muted small">Total jarak</span>
+                        <span class="fw-bold text-dark" id="totalDistance">-</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <span class="text-muted small">Estimasi perjalanan</span>
+                        <span class="fw-bold" style="color: var(--pos-blue);" id="totalDuration">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+    <script>
+        let map;
+        let kantorPos;
+        let markerById = new Map();
+        let availableKiriman = [];
+        let selectedKiriman = [];
+        let pendingSwapId = null;
+
+        function escapeHtml(value) {
+            return $('<div>').text(value || '-').html();
+        }
+
+        function markerElement(kiriman) {
+            const marker = document.createElement('button');
+            marker.type = 'button';
+            marker.className = 'manual-marker';
+            marker.title = `Pilih ${kiriman.no_kiriman}`;
+            marker.addEventListener('click', () => toggleKiriman(kiriman.id));
+            return marker;
+        }
+
+        function initMap() {
+            mapboxgl.accessToken = 'apikey';
+            map = new mapboxgl.Map({
+                container: 'manualRouteMap',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [kantorPos.lng, kantorPos.lat],
+                zoom: 12
+            });
+            map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+            map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+            new mapboxgl.Marker({ color: '#1B2C59' })
+                .setLngLat([kantorPos.lng, kantorPos.lat])
+                .setPopup(new mapboxgl.Popup({ offset: 20 }).setText('Kantor Pos'))
+                .addTo(map);
+        }
+
+        function renderMarkers() {
+            markerById.forEach(marker => marker.remove());
+            markerById.clear();
+            const bounds = new mapboxgl.LngLatBounds([kantorPos.lng, kantorPos.lat], [kantorPos.lng, kantorPos.lat]);
+
+            availableKiriman.forEach(kiriman => {
+                const element = markerElement(kiriman);
+                const selectedIndex = selectedKiriman.findIndex(item => item.id === kiriman.id);
+                if (selectedIndex >= 0) {
+                    element.classList.add('selected');
+                    if (kiriman.id === pendingSwapId) {
+                        element.classList.add('swap-pending');
+                    }
+                    element.textContent = selectedIndex + 1;
+                } else {
+                    element.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                }
+
+                const marker = new mapboxgl.Marker({ element: element })
+                    .setLngLat([kiriman.longitude, kiriman.latitude])
+                    .setPopup(new mapboxgl.Popup({ offset: 18 }).setHTML(
+                        `<strong>${escapeHtml(kiriman.no_kiriman)}</strong><br>${escapeHtml(kiriman.recipient_name)}`
+                    ))
+                    .addTo(map);
+                markerById.set(kiriman.id, marker);
+                bounds.extend([kiriman.longitude, kiriman.latitude]);
+            });
+
+            if (availableKiriman.length) {
+                map.fitBounds(bounds, { padding: 55, maxZoom: 14 });
+            }
+        }
+
+        function renderSelectedList() {
+            const $list = $('#selectedList').empty();
+            $('#selectedCount').text(`${selectedKiriman.length} titik`);
+            $('#btnHitungRute').prop('disabled', selectedKiriman.length < 1);
+            $('#btnHitungAlgoritma').prop('disabled', selectedKiriman.length < 2);
+
+            if (!selectedKiriman.length) {
+                $list.append('<span class="text-muted small">Belum ada kiriman yang dipilih.</span>');
+                return;
+            }
+
+            selectedKiriman.forEach((kiriman, index) => {
+                $list.append(`
+                    <div class="manual-list-item d-flex align-items-center gap-2 p-2">
+                        <span class="route-index">${index + 1}</span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="small fw-semibold text-dark text-truncate">${escapeHtml(kiriman.no_kiriman)}</div>
+                            <div class="text-muted small text-truncate">${escapeHtml(kiriman.recipient_name)}</div>
+                            ${kiriman.waktu_pod ? `<div class="text-muted small">${new Date(kiriman.waktu_pod).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>` : ''}
+                        </div>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-light border route-action" data-action="up" data-id="${kiriman.id}" ${index === 0 ? 'disabled' : ''} title="Naik"><i class="bi bi-chevron-up"></i></button>
+                            <button class="btn btn-light border route-action" data-action="down" data-id="${kiriman.id}" ${index === selectedKiriman.length - 1 ? 'disabled' : ''} title="Turun"><i class="bi bi-chevron-down"></i></button>
+                            <button class="btn btn-light border text-danger route-action" data-action="remove" data-id="${kiriman.id}" title="Hapus"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        function renderSelection() {
+            renderSelectedList();
+            renderMarkers();
+            clearRoute();
+        }
+
+        function toggleKiriman(id) {
+            const index = selectedKiriman.findIndex(item => item.id === id);
+            if (index < 0) {
+                const kiriman = availableKiriman.find(item => item.id === id);
+                if (kiriman) selectedKiriman.push(kiriman);
+                pendingSwapId = null;
+            } else if (pendingSwapId === null) {
+                pendingSwapId = id;
+            } else if (pendingSwapId === id) {
+                pendingSwapId = null;
+            } else {
+                const pendingIndex = selectedKiriman.findIndex(item => item.id === pendingSwapId);
+                [selectedKiriman[pendingIndex], selectedKiriman[index]] =
+                    [selectedKiriman[index], selectedKiriman[pendingIndex]];
+                pendingSwapId = null;
+            }
+            renderSelection();
+        }
+
+        function clearRoute() {
+            if (!map) {
+                $('#totalDistance, #totalDuration').text('-');
+                $('#btnToggleStraight').prop('disabled', true).html('<i class="bi bi-dash-lg me-1"></i> Garis Lurus');
+                $('#btnTogglePolyline').prop('disabled', true).html('<i class="bi bi-bezier2 me-1"></i> Polyline Rute');
+                return;
+            }
+
+            if (map.getLayer('manual-straight-layer')) map.removeLayer('manual-straight-layer');
+            if (map.getSource('manual-straight-source')) map.removeSource('manual-straight-source');
+            if (map.getLayer('manual-route-layer')) map.removeLayer('manual-route-layer');
+            if (map.getSource('manual-route-source')) map.removeSource('manual-route-source');
+            $('#totalDistance, #totalDuration').text('-');
+            $('#btnToggleStraight').prop('disabled', true).html('<i class="bi bi-dash-lg me-1"></i> Garis Lurus');
+            $('#btnTogglePolyline').prop('disabled', true).html('<i class="bi bi-bezier2 me-1"></i> Polyline Rute');
+        }
+
+        function decodePolyline(encoded, precision = 6) {
+            let index = 0, lat = 0, lng = 0, coordinates = [], shift, result, byte;
+            const factor = Math.pow(10, precision);
+            while (index < encoded.length) {
+                shift = 0; result = 0;
+                do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+                lat += result & 1 ? ~(result >> 1) : (result >> 1);
+                shift = 0; result = 0;
+                do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+                lng += result & 1 ? ~(result >> 1) : (result >> 1);
+                coordinates.push([lng / factor, lat / factor]);
+            }
+            return coordinates;
+        }
+
+        function formatDistance(kilometers) {
+            if (!kilometers || kilometers <= 0) return '-';
+            const meters = Math.round(kilometers * 1000);
+            if (meters < 1000) return `${meters} m`;
+
+            const km = Math.floor(meters / 1000);
+            const remainingMeters = meters % 1000;
+            return remainingMeters ? `${km} km ${remainingMeters} m` : `${km} km`;
+        }
+
+        function formatDuration(seconds) {
+            const minutes = Math.round(seconds / 60);
+            return minutes >= 60 ? `${Math.floor(minutes / 60)} jam ${minutes % 60} menit` : `${minutes} menit`;
+        }
+
+        function hitungRute() {
+            const locations = selectedKiriman.map(item => ({
+                lat: item.latitude,
+                lon: item.longitude
+            }));
+            const $button = $('#btnHitungRute').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menghitung...');
+
+            $.ajax({
+                url: API_BASE_URL + '/api/optimization/calculate',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ locations: locations })
+            }).done(function (result) {
+                const routes = result.polylines || [];
+                const coordinates = [];
+                const totalDistance = Number(result.totalDistance || 0);
+                const totalDuration = Number(result.totalDuration || 0);
+                routes.forEach(route => {
+                    const polyline = typeof route === 'string' ? route : route.polyline;
+                    if (polyline) coordinates.push(...decodePolyline(polyline));
+                });
+
+                if (!coordinates.length) {
+                    alert('Garis rute tidak tersedia.');
+                    return;
+                }
+
+                clearRoute();
+                map.addSource('manual-straight-source', {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [kantorPos.lng, kantorPos.lat],
+                                ...locations.map(item => [item.lon, item.lat]),
+                                [kantorPos.lng, kantorPos.lat]
+                            ]
+                        }
+                    }
+                });
+                map.addLayer({
+                    id: 'manual-straight-layer',
+                    type: 'line',
+                    source: 'manual-straight-source',
+                    paint: {
+                        'line-color': '#EF4444',
+                        'line-width': 4,
+                        'line-opacity': 1
+                    }
+                });
+                map.addSource('manual-route-source', {
+                    type: 'geojson',
+                    data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coordinates } }
+                });
+                map.addLayer({
+                    id: 'manual-route-layer',
+                    type: 'line',
+                    source: 'manual-route-source',
+                    paint: { 'line-color': '#1B2C59', 'line-width': 5, 'line-opacity': .9 }
+                });
+                $('#totalDistance').text(formatDistance(totalDistance));
+                $('#totalDuration').text(formatDuration(totalDuration));
+                $('#btnToggleStraight').prop('disabled', false).html('<i class="bi bi-eye me-1"></i> Sembunyikan Garis Lurus');
+                $('#btnTogglePolyline').prop('disabled', false).html('<i class="bi bi-eye me-1"></i> Sembunyikan Polyline Rute');
+            }).fail(function (xhr) {
+                alert(xhr.responseJSON?.message || 'Gagal menghitung rute.');
+            }).always(function () {
+                $button.prop('disabled', selectedKiriman.length < 1).html('<i class="bi bi-bezier2 me-1"></i> Hitung Rute');
+            });
+        }
+
+        function hitungRuteDenganAlgoritma() {
+            if (selectedKiriman.length < 2) return;
+
+            const $button = $('#btnHitungAlgoritma')
+                .prop('disabled', true)
+                .html('<span class="spinner-border spinner-border-sm me-1"></span> Mengatur Urutan...');
+
+            $.ajax({
+                url: API_BASE_URL + '/api/optimization/run',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    depotLat: kantorPos.lat,
+                    depotLon: kantorPos.lng,
+                    algoritma: 'aco',
+                    ant: selectedKiriman.length,
+                    is_2opt: true,
+                    pakets: selectedKiriman.map(item => ({
+                        id: item.id,
+                        lat: item.latitude,
+                        lon: item.longitude
+                    }))
+                })
+            }).done(function (hasil) {
+                const urutan = hasil.orderedPakets || [];
+                const idTerurut = urutan.map(item => Number(item.paketId));
+                const pilihanTerurut = idTerurut
+                    .map(id => selectedKiriman.find(item => Number(item.id) === id))
+                    .filter(Boolean);
+
+                if (pilihanTerurut.length !== selectedKiriman.length) {
+                    alert('Hasil urutan algoritma tidak lengkap.');
+                    return;
+                }
+
+                selectedKiriman = pilihanTerurut;
+                pendingSwapId = null;
+                renderSelection();
+                hitungRute();
+            }).fail(function (xhr) {
+                alert(xhr.responseJSON?.message || 'Gagal menghitung rute dengan algoritma.');
+            }).always(function () {
+                $button
+                    .prop('disabled', selectedKiriman.length < 2)
+                    .html('<i class="bi bi-diagram-3 me-1"></i> Hitung Rute dengan Algoritma');
+            });
+        }
+
+        function loadManualKiriman() {
+            $.get(API_BASE_URL + '/api/paket').done(function (kiriman) {
+                availableKiriman = kiriman
+                    .filter(item => item.latitude != null && item.longitude != null);
+                selectedKiriman = [];
+                renderSelection();
+            }).fail(function () {
+                alert('Gagal memuat data kiriman.');
+            });
+        }
+
+        function loadUrutanPod() {
+            const tanggal = $('#filterTanggalPod').val();
+            if (!tanggal) {
+                alert('Tanggal POD wajib diisi.');
+                return;
+            }
+
+            $.get(API_BASE_URL + `/api/pod/urutan-pengantaran?tanggal=${encodeURIComponent(tanggal)}`)
+                .done(function (response) {
+                    availableKiriman = response.data || [];
+                    selectedKiriman = [...availableKiriman];
+                    renderSelection();
+                    $('#podFilterInfo').text(
+                        availableKiriman.length
+                            ? `${availableKiriman.length} kiriman diurutkan berdasarkan waktu POD.`
+                            : 'Tidak ada POD dengan titik koordinat pada tanggal ini.'
+                    );
+                }).fail(function () {
+                    alert('Gagal memuat urutan POD.');
+                });
+        }
+
+        $(function () {
+            $.get(API_BASE_URL + '/api/lokasi-kantor/getKantor').done(function (kantor) {
+                kantorPos = { lat: Number(kantor.latitude), lng: Number(kantor.longitude) };
+                initMap();
+                loadManualKiriman();
+            }).fail(function () {
+                alert('Gagal memuat lokasi kantor.');
+            });
+
+            $('#selectedList').on('click', 'button[data-action]', function () {
+                const id = Number($(this).data('id'));
+                const action = $(this).data('action');
+                const index = selectedKiriman.findIndex(item => item.id === id);
+                if (index < 0) return;
+                if (action === 'remove') {
+                    selectedKiriman.splice(index, 1);
+                    pendingSwapId = null;
+                }
+                if (action === 'up' && index > 0) [selectedKiriman[index - 1], selectedKiriman[index]] = [selectedKiriman[index], selectedKiriman[index - 1]];
+                if (action === 'down' && index < selectedKiriman.length - 1) [selectedKiriman[index + 1], selectedKiriman[index]] = [selectedKiriman[index], selectedKiriman[index + 1]];
+                renderSelection();
+            });
+
+            $('#btnResetRute').on('click', function () {
+                selectedKiriman = [];
+                pendingSwapId = null;
+                renderSelection();
+            });
+            $('#btnHitungRute').on('click', hitungRute);
+            $('#btnHitungAlgoritma').on('click', hitungRuteDenganAlgoritma);
+            $('#btnToggleStraight').on('click', function () {
+                toggleRouteLayer('manual-straight-layer', $(this), 'Garis Lurus');
+            });
+            $('#btnTogglePolyline').on('click', function () {
+                toggleRouteLayer('manual-route-layer', $(this), 'Polyline Rute');
+            });
+            $('#filterMode').on('change', function () {
+                $('#filterTanggalPod').prop('disabled', this.value !== 'pod');
+                $('#podFilterInfo').text('');
+            });
+
+            function toggleRouteLayer(layerId, $button, label) {
+                if (!map || !map.getLayer(layerId)) return;
+
+                const isVisible = map.getLayoutProperty(layerId, 'visibility') !== 'none';
+                map.setLayoutProperty(layerId, 'visibility', isVisible ? 'none' : 'visible');
+                $button.html(
+                    isVisible
+                        ? `<i class="bi bi-eye-slash me-1"></i> Tampilkan ${label}`
+                        : `<i class="bi bi-eye me-1"></i> Sembunyikan ${label}`
+                );
+            }
+            $('#btnTerapkanFilter').on('click', function () {
+                clearRoute();
+                if ($('#filterMode').val() === 'pod') {
+                    loadUrutanPod();
+                } else {
+                    loadManualKiriman();
+                }
+            });
+        });
+    </script>
+}

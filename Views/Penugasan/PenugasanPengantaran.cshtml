@@ -1,0 +1,414 @@
+@{
+    ViewData["Title"] ??= "Penugasan Pengantaran";
+    var namaHalamanPenugasan = ViewData["NamaHalamanPenugasan"]?.ToString() ?? "Penugasan Pengantaran";
+    var sembunyikanHapusPenugasan = ViewData["SembunyikanHapusPenugasan"] as bool? ?? false;
+}
+
+<style>
+    /* Table Controls: Length & Search */
+    #tableLengthContainer select,
+    #tableLengthContainer .form-select {
+        height: 34px !important;
+        padding: 0 28px 0 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        font-size: 0.8rem !important;
+        font-weight: 500;
+        color: #1e293b !important;
+        background-color: #ffffff !important;
+        cursor: pointer;
+        display: inline-block !important;
+        width: auto !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    #tableLengthContainer select:focus {
+        border-color: #1B2C59 !important;
+        box-shadow: 0 0 0 3px rgba(27, 44, 89, 0.08) !important;
+        outline: none;
+    }
+
+    #tableSearchContainer input,
+    #tableSearchContainer .form-control {
+        height: 34px !important;
+        padding: 0 11px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        font-size: 0.8rem !important;
+        color: #1e293b !important;
+        background-color: #ffffff !important;
+        width: 190px !important;
+        outline: none;
+        display: inline-block !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, width 0.2s ease;
+    }
+
+    #tableSearchContainer input:focus {
+        border-color: #1B2C59 !important;
+        box-shadow: 0 0 0 3px rgba(27, 44, 89, 0.08) !important;
+        width: 220px !important;
+    }
+
+    .btn-primary-action {
+        height: 34px;
+        padding: 0 14px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 6px;
+        background-color: #1B2C59;
+        color: #ffffff;
+        border: 1px solid transparent;
+        box-shadow: 0 1px 2px rgba(27, 44, 89, 0.12);
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary-action:hover {
+        background-color: #142245;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 5px -1px rgba(27, 44, 89, 0.2);
+    }
+
+    .filter-inputs-wrap {
+        display: flex;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .filter-item-date {
+        width: 180px;
+    }
+
+    .btn-filter-compact {
+        height: 34px !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        padding: 0 16px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        width: auto !important;
+    }
+
+    @@media (max-width: 576px) {
+        .filter-item-date {
+            width: 100% !important;
+        }
+        .btn-filter-compact {
+            width: 100% !important;
+        }
+    }
+
+    /* Enhanced Table Padding */
+    #tableJadwal thead th {
+        padding: 1.15rem 1.35rem !important;
+        font-size: 0.76rem !important;
+        letter-spacing: 0.04em !important;
+        white-space: nowrap !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        text-transform: uppercase !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+
+    #tableJadwal tbody td {
+        padding: 1.15rem 1.35rem !important;
+        font-size: 0.84rem !important;
+        vertical-align: middle !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        color: #334155;
+    }
+
+    #tableJadwal thead th:first-child,
+    #tableJadwal tbody td:first-child {
+        padding-left: 1.75rem !important;
+    }
+
+    #tableJadwal thead th:last-child,
+    #tableJadwal tbody td:last-child {
+        padding-right: 1.75rem !important;
+    }
+
+    .dash-table-wrapper {
+        padding-bottom: 1.5rem !important;
+    }
+
+    .dash-table-wrapper .table-responsive {
+        padding-bottom: 0.75rem !important;
+    }
+
+    .dash-table-wrapper .dt-container .dt-layout-row:last-child,
+    .dash-table-wrapper .dataTables_wrapper .row:last-child {
+        padding: 1.25rem 1.75rem 1.5rem 1.75rem !important;
+    }
+
+    /* Sleek Action Buttons */
+    .btn-row-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        font-size: 0.875rem;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-row-view {
+        background-color: rgba(27, 44, 89, 0.06);
+        color: #1B2C59;
+        border-color: rgba(27, 44, 89, 0.15);
+    }
+
+    .btn-row-view:hover {
+        background-color: #1B2C59;
+        color: #ffffff;
+        border-color: #1B2C59;
+        transform: translateY(-1px);
+    }
+
+    .btn-row-delete {
+        background-color: rgba(239, 68, 68, 0.06);
+        color: #dc2626;
+        border-color: rgba(239, 68, 68, 0.18);
+    }
+
+    .btn-row-delete:hover {
+        background-color: #dc2626;
+        color: #ffffff;
+        border-color: #dc2626;
+        transform: translateY(-1px);
+    }
+</style>
+
+<main>
+    <!-- Filter Toolbar Card -->
+    <div class="table-toolbar-card">
+        <div class="filter-inputs-wrap">
+            <div class="filter-item-date">
+                <label class="form-field-label" for="filterStart">Tanggal Awal</label>
+                <input type="date" class="form-field-input" id="filterStart" required>
+            </div>
+            <div class="filter-item-date">
+                <label class="form-field-label" for="filterEnd">Tanggal Akhir</label>
+                <input type="date" class="form-field-input" id="filterEnd" required>
+            </div>
+            <div>
+                <button type="button" class="btn btn-pos btn-filter-compact" id="btnFilter">
+                    <i class="bi bi-funnel me-1"></i> Terapkan Filter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="dash-table-wrapper">
+        <!-- Top Row: Card Title & Primary Action Button -->
+        <div class="table-card-topbar">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <h3 class="table-main-title">Penugasan Pengantaran</h3>
+                <a href="@(ViewData["TambahPenugasanUrl"] ?? "/penugasan/TambahPenugasan")" class="btn btn-pos btn-primary-action shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i>
+                    <span>Tambah Penugasan</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Controls Toolbar Row Below Title: Length & Search -->
+        <div class="table-controls-bar">
+            <div class="table-controls-left">
+                <div id="tableLengthContainer"></div>
+            </div>
+            <div class="table-controls-right">
+                <div id="tableSearchContainer"></div>
+            </div>
+        </div>
+        <div class="table-responsive p-0">
+            <table id="tableJadwal" class="table table-hover w-100 mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-center" width="50">No</th>
+                        <th class="text-center">Kode Penugasan</th>
+                        <th class="text-center">Petugas</th>
+                        <th class="text-center">Jumlah Kiriman</th>
+                        <th class="text-center">Tanggal Penugasan</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center" style="width: 120px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const API_BASE = API_BASE_URL + "/api/manajemen-antaran";
+            const tampilkanHapusPenugasan = @(sembunyikanHapusPenugasan ? "false" : "true");
+
+            // Set Default Value Hari Ini ke Input Filter (WIB)
+            let d = new Date();
+            let year = d.getFullYear();
+            let month = String(d.getMonth() + 1).padStart(2, '0');
+            let day = String(d.getDate()).padStart(2, '0');
+            let todayLocal = `${year}-${month}-${day}`;
+
+            $('#filterStart').val(todayLocal);
+            $('#filterEnd').val(todayLocal);
+
+            function relocateTableControls() {
+                var $wrap = $('#tableJadwal').closest('.dt-container');
+                if (!$wrap.length) $wrap = $('#tableJadwal').closest('.dataTables_wrapper');
+
+                var $length = $wrap.find('.dt-length, .dataTables_length');
+                var $search = $wrap.find('.dt-search, .dataTables_filter');
+
+                if ($length.length && !$('#tableLengthContainer').children().length) {
+                    $length.appendTo('#tableLengthContainer');
+                }
+                if ($search.length && !$('#tableSearchContainer').children().length) {
+                    $search.appendTo('#tableSearchContainer');
+                }
+
+                var $searchInput = $('#tableSearchContainer').find('input');
+                if ($searchInput.length && !$searchInput.attr('placeholder')) {
+                    $searchInput.attr('placeholder', 'Ketik kata kunci...');
+                }
+
+                $wrap.find('> .row:first-child:not(.dt-layout-table)').hide();
+                $wrap.find('.dt-layout-row:first-child:not(.dt-layout-table)').hide();
+            }
+
+            let table = $('#tableJadwal').DataTable({
+                pageLength: 10,
+                initComplete: function () {
+                    relocateTableControls();
+                },
+                drawCallback: function () {
+                    relocateTableControls();
+                }
+            });
+
+            function loadData() {
+                let start = $('#filterStart').val();
+                let end = $('#filterEnd').val();
+
+                // Validasi Alert Biasa
+                if (!start || !end) {
+                    alert("Tanggal Awal dan Tanggal Akhir tidak boleh kosong!");
+                    return;
+                }
+
+                if (new Date(start) > new Date(end)) {
+                    alert("Tanggal Awal tidak boleh lebih besar dari Tanggal Akhir!");
+                    return;
+                }
+
+                // Hanya tampilkan penugasan aktif yang belum selesai.
+                let apiUrl = `${API_BASE}/penugasan?tglAwal=${start}&tglAkhir=${end}`;
+
+                $.get(apiUrl, function (data) {
+                    console.log(data);
+                    table.clear();
+
+                    // Saring di sisi klien: tampilkan hanya penugasan yang belum selesai
+                    data = data.filter(item => item.status !== 'selesai');
+
+                    data.forEach((item, index) => {
+                        let statusBadge = `<span class="status-badge status-delivery">Sedang Berjalan</span>`;
+
+                        table.row.add([
+                            `<span class="text-secondary fw-medium">${index + 1}</span>`,
+                            `<span class="fw-bold text-dark font-monospace">${item.kodePenugasan}</span>`,
+                            `<span class="fw-semibold text-dark">${item.namaKurir}</span>`,
+                            item.jumlahPaket === 0
+                                ? `<span class="text-muted small">Belum scan kiriman</span>`
+                                : `<span><strong class="text-dark">${item.jumlahPaket}</strong> <span class="text-muted small">paket</span></span>`,
+                            `<span class="text-secondary">${formatDate(item.tanggal)}</span>`,
+                            statusBadge,
+                            `
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="/Penugasan/DetailPenugasan/${item.id}" class="btn-row-action btn-row-view" title="Lihat Detail">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    ${tampilkanHapusPenugasan ? `
+                                        <button class="d-none btn-row-action btn-row-delete" onclick="deletePenugasan(${item.id})" title="Hapus Penugasan">
+                                            <i class="bi bi-trash"></i>
+                                        </button>` : ''}
+                                </div>
+                            `
+                        ]);
+                    });
+
+                    table.draw();
+                }).fail(function () {
+                    alert("Gagal memuat data dari server.");
+                });
+            }
+
+            $('#btnFilter').click(function () {
+                loadData();
+            });
+
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                return day + '/' + month + '/' + date.getFullYear();
+            }
+
+            function loadUsers() {
+                $.get("/api/users", function (data) {
+                    $('#filterUser').empty().append(`<option value="">Semua Kurir</option>`);
+                    $('#inputUser').empty();
+                    data.forEach(u => {
+                        $('#filterUser').append(`<option value="${u.id}">${u.nama}</option>`);
+                        $('#inputUser').append(`<option value="${u.id}">${u.nama}</option>`);
+                    });
+                });
+            }
+
+            loadUsers();
+            loadData();
+        });
+
+        // Fitur Delete Konfirmasi Browser Biasa
+        function deletePenugasan(jadwalId) {
+            let confirmDelete = confirm("Apakah Anda yakin ingin menghapus penugasan ini beserta semua detail penugasannya? Data yang dihapus tidak dapat dikembalikan.");
+
+            if (confirmDelete) {
+                let apiUrl = API_BASE_URL + "/api/manajemen-antaran/penugasan?jadwalId=" + jadwalId;
+
+                $.ajax({
+                    url: apiUrl,
+                    type: 'DELETE',
+                    success: function (response) {
+                        alert((response.message || "Data berhasil dihapus."));
+                        $('#btnFilter').click();
+                    },
+                    error: function (xhr) {
+                        let errorMsg = "Terjadi kesalahan pada server.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        alert("Gagal menghapus: " + errorMsg);
+                    }
+                });
+            }
+        }
+    </script>
+}

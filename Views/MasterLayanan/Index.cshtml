@@ -1,0 +1,141 @@
+@{
+    ViewData["Title"] = "Master Layanan";
+}
+
+<main>
+    <div class="breadcrumb-bar">
+        <span class="current">Master Layanan</span>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title-section">Daftar Layanan</h5>
+            <button class="btn btn-pos d-inline-flex align-items-center gap-2" onclick="openModalAdd()">
+                <i class="bi bi-plus-lg"></i> Tambah Layanan
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="tableLayanan" class="table table-bordered table-pos w-100">
+                    <thead>
+                        <tr>
+                            <th style="width:55px;">No</th>
+                            <th>Nama Layanan</th>
+                            <th>Deskripsi</th>
+                            <th style="width:100px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal fade" id="modalLayanan" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title header-title" id="modalTitle">Tambah Layanan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formLayanan">
+                <div class="modal-body">
+                    <input type="hidden" id="layananId">
+                    <div class="mb-3">
+                        <label class="label-pos">Nama Layanan</label>
+                        <input type="text" class="form-control form-control-pos" id="nama" required>
+                    </div>
+                    <div class="mb-1">
+                        <label class="label-pos">Deskripsi</label>
+                        <textarea class="form-control form-control-pos" id="deskripsi" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-pos px-4">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const API_URL = API_BASE_URL + "/api/master-layanan";
+    let table;
+
+    $(document).ready(function () {
+        table = $('#tableLayanan').DataTable({
+            pageLength: 10,
+            dom: '<"p-3 border-bottom d-flex justify-content-between align-items-center"lf>t<"p-3 d-flex justify-content-between align-items-center"ip>',
+            language: { search: "Cari:", lengthMenu: "Tampilkan _MENU_ data", paginate: { previous: "‹", next: "›" } }
+        });
+
+        loadData();
+
+        $('#formLayanan').submit(function (e) {
+            e.preventDefault();
+            saveData();
+        });
+    });
+
+    function loadData() {
+        $.get(`${API_URL}/get-all`, function (data) {
+            table.clear();
+            data.forEach((x, i) => {
+                table.row.add([
+                    `<span style="color: var(--pos-text-muted);">${i + 1}</span>`,
+                    `<span class="fw-medium" style="color: var(--pos-text);">${x.nama}</span>`,
+                    `<span style="color: var(--pos-text-muted); font-size:0.8rem;">${x.deskripsi ?? '-'}</span>`,
+                    `<div class="d-flex justify-content-center gap-1">
+                        <button class="btn-action btn-edit" onclick="openModalEdit(${x.id},'${encodeURIComponent(x.nama)}','${encodeURIComponent(x.deskripsi ?? "")}')" title="Edit"><i class="bi bi-pencil"></i></button>
+                        <button class="btn-action btn-delete" onclick="deleteData(${x.id})" title="Hapus"><i class="bi bi-trash"></i></button>
+                    </div>`
+                ]);
+            });
+            table.draw();
+        });
+    }
+
+    function openModalAdd() {
+        $('#layananId').val(''); $('#nama').val(''); $('#deskripsi').val('');
+        $('#modalTitle').text('Tambah Layanan');
+        $('#modalLayanan').modal('show');
+    }
+
+    function openModalEdit(id, nama, deskripsi) {
+        $('#layananId').val(id);
+        $('#nama').val(decodeURIComponent(nama));
+        $('#deskripsi').val(decodeURIComponent(deskripsi));
+        $('#modalTitle').text('Edit Layanan');
+        $('#modalLayanan').modal('show');
+    }
+
+    function saveData() {
+        const id = $('#layananId').val();
+        const payload = { nama: $('#nama').val(), deskripsi: $('#deskripsi').val() };
+        const isEdit = id !== "";
+        $.ajax({
+            url: isEdit ? `${API_URL}/update/${id}` : `${API_URL}/create`,
+            type: isEdit ? 'PUT' : 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function (res) { $('#modalLayanan').modal('hide'); loadData(); alert(res.message); },
+            error: function () { alert('Terjadi kesalahan'); }
+        });
+    }
+
+    function deleteData(id) {
+        if (confirm('Yakin ingin menghapus data?')) {
+            $.ajax({
+                url: `${API_URL}/delete/${id}`,
+                type: 'DELETE',
+                success: function (res) { loadData(); alert(res.message); },
+                error: function () { alert('Gagal menghapus data'); }
+            });
+        }
+    }
+</script>
+}

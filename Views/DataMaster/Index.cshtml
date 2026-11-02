@@ -1,0 +1,69 @@
+@*
+    DataMaster/Index - redirect/landing untuk data master
+*@
+@{
+    ViewData["Title"] = "Data Master";
+}
+
+<main>
+    <div class="breadcrumb-bar">
+        <span class="current"><i class="bi bi-database-fill"></i> Data Master</span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <a href="/DataMaster/Users" class="quick-action">
+                <div class="quick-action-icon blue"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <strong>Master Pengguna</strong>
+                    <small>Kelola akun &amp; role</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <a href="/DataMaster/Roles" class="quick-action">
+                <div class="quick-action-icon blue"><i class="bi bi-shield-fill"></i></div>
+                <div>
+                    <strong>Master Role</strong>
+                    <small>Kelola hak akses</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <a href="/DataMaster/LokasiKantor" class="quick-action">
+                <div class="quick-action-icon orange"><i class="bi bi-geo-alt-fill"></i></div>
+                <div>
+                    <strong>Lokasi Kantor</strong>
+                    <small>Konfigurasi koordinat</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <a href="/DataMaster/ProofOfDelivery" class="quick-action">
+                <div class="quick-action-icon green"><i class="bi bi-receipt-cutoff"></i></div>
+                <div>
+                    <strong>Data POD</strong>
+                    <small>Bukti penerimaan</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <a href="/MasterKriteria" class="quick-action">
+                <div class="quick-action-icon blue"><i class="bi bi-tags-fill"></i></div>
+                <div>
+                    <strong>Jenis Kiriman</strong>
+                    <small>Kelola kriteria kiriman</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <a href="/MasterLayanan" class="quick-action">
+                <div class="quick-action-icon cyan"><i class="bi bi-layers-fill"></i></div>
+                <div>
+                    <strong>Master Layanan</strong>
+                    <small>Kelola jenis layanan</small>
+                </div>
+            </a>
+        </div>
+    </div>
+</main>

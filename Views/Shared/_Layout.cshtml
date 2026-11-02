@@ -1,0 +1,375 @@
+@inject IConfiguration Configuration
+
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1B2C59" />
+    <title>@ViewData["Title"] - POS KCP 44188</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous" />
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.5/css/dataTables.bootstrap5.css">
+
+    <!-- POS Theme -->
+    <link href="~/custom/admin-lte/css/pos-theme.css" rel="stylesheet">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/2.3.5/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.3.5/js/dataTables.bootstrap5.js"></script>
+
+    <!-- XLSX -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        // GLOBAL COOKIE HELPER
+        window.getCookie = function (name) {
+            let ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i].trim();
+                if (c.indexOf(name + "=") == 0) return decodeURIComponent(c.substring(name.length + 1, c.length));
+            }
+            return "";
+        };
+
+        // AUTH GUARD: Cek Login & Expiry sebelum halaman dirender
+        (function () {
+            function isTokenExpired(token) {
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const payload = JSON.parse(window.atob(base64));
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    return payload.exp < currentTime;
+                } catch (e) {
+                    return true;
+                }
+            }
+
+            const token = window.getCookie("token");
+
+            if (!token || isTokenExpired(token)) {
+                document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                window.location.href = '/Auth/Login';
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <div class="app-wrapper">
+
+        <!-- ============================================ -->
+        <!-- SIDEBAR                                      -->
+        <!-- ============================================ -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo-box">
+                    <img src="~/custom/content/img/logo-pos.png" alt="POS Indonesia" />
+                </div>
+                <div class="sidebar-brand-text">
+                    <span class="brand-name">POS INDONESIA</span>
+                    <span class="brand-branch">KCP 44188</span>
+                </div>
+            </div>
+
+            <div class="sidebar-nav" id="navigation">
+                <a href="/" class="nav-link" title="Dashboard">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="/kiriman" class="nav-link" title="Data Kiriman">
+                    <i class="bi bi-box-seam-fill"></i>
+                    <span>Data Kiriman</span>
+                </a>
+
+                <a href="/Penugasan/PenugasanPengantaran" class="nav-link" title="Penugasan Pengantaran">
+                    <i class="bi bi-truck"></i>
+                    <span>Penugasan Pengantaran</span>
+                </a>
+
+                <a href="/Penugasan/RiwayatPenugasan" class="nav-link" title="Histori Penugasan">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Histori Penugasan</span>
+                </a>
+
+                <a href="/Penugasan/OptimasiPengantaran" class="nav-link d-none">
+                    <i class="bi bi-map-fill"></i>
+                    <span>Optimasi Rute</span>
+                </a>
+
+                <a href="/Penugasan/OptimasiPengantaran2" class="nav-link d-none">
+                    <i class="bi bi-map-fill"></i>
+                    <span>Optimasi Rute 2</span>
+                </a>
+
+                <a href="/Penugasan/TestingRute" class="nav-link d-none">
+                    <i class="bi bi-bezier2"></i>
+                    <span>Testing Rute</span>
+                </a>
+
+                <a href="/home/Setting" class="nav-link d-none">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>Pengaturan</span>
+                </a>
+            </div>
+
+            <div class="sidebar-bottom">
+                <button type="button" onclick="logoutSistem()" class="btn-sidebar-exit-wide" title="Keluar Sistem">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Keluar Sistem</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============================================ -->
+        <!-- TOPBAR                                       -->
+        <!-- ============================================ -->
+        <nav class="app-topbar">
+            <div class="topbar-left">
+                <button type="button" class="btn-menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Sembunyikan sidebar" aria-expanded="true" aria-controls="appSidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="topbar-page-label">
+                    <h1 class="topbar-page-title" id="pageTitle">Dashboard</h1>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-user-card">
+                    <div class="topbar-user-avatar" id="userAvatar">A</div>
+                    <div class="topbar-user-meta">
+                        <span class="topbar-user-name" id="displayUserName">Memuat...</span>
+                        <span class="topbar-user-role">
+                            <span class="role-status-dot"></span>
+                            <span id="displayUserRole">-</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- ============================================ -->
+        <!-- MAIN CONTENT                                 -->
+        <!-- ============================================ -->
+        <div class="app-content">
+            <!-- CONTENT BREADCRUMB (TIDAK TAMPIL DI DASHBOARD) -->
+            @if (ViewData["Title"] != null && ViewData["Title"]?.ToString() != "Dashboard" && ViewData["Title"]?.ToString() != "Beranda")
+            {
+                <nav class="content-breadcrumb-nav d-flex justify-content-end" aria-label="breadcrumb">
+                    <ol class="content-breadcrumb-list" id="contentBreadcrumbList">
+                        <li class="content-crumb-item active">@ViewData["Title"]</li>
+                        <li class="content-crumb-sep">/</li>
+                    </ol>
+                </nav>
+            }
+
+            @RenderBody()
+        </div>
+
+    </div>
+
+    <script>
+        // DataTables Indonesian Language Default
+        $.extend($.fn.dataTable.defaults, {
+            language: {
+                lengthMenu: "Tampilkan _MENU_ data",
+                zeroRecords: "Tidak ada data yang cocok",
+                emptyTable: "Tidak ada data yang tersedia pada tabel",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 data",
+                infoFiltered: "(disaring dari total _MAX_ data)",
+                loadingRecords: "Memuat data...",
+                processing: "Sedang memproses data...",
+                search: "Cari:",
+                searchPlaceholder: "Ketik kata kunci...",
+                paginate: {
+                    first: "«",
+                    last: "»",
+                    next: "›",
+                    previous: "‹"
+                }
+            }
+        });
+
+        let API_BASE_URL = "@Configuration["ApiSettings:BaseUrl"]";
+        if (API_BASE_URL.includes("localhost:21001") || API_BASE_URL.includes("127.0.0.1:21001")) {
+            API_BASE_URL = window.location.protocol + "//" + window.location.hostname + ":21001";
+        }
+        let userLogin = null;
+
+        // ============================================
+        // SIDEBAR TOGGLE
+        // ============================================
+        function toggleSidebar() {
+            var appWrapper = document.querySelector('.app-wrapper');
+            var sidebar = document.getElementById('appSidebar');
+            var menuToggle = document.getElementById('menuToggle');
+            var isMobile = window.matchMedia('(max-width: 992px)').matches;
+
+            if (isMobile) {
+                var sidebarIsOpen = appWrapper.classList.toggle('sidebar-open');
+                sidebar.classList.toggle('closed', !sidebarIsOpen);
+                menuToggle.setAttribute('aria-expanded', sidebarIsOpen.toString());
+            } else {
+                var sidebarIsHidden = appWrapper.classList.toggle('sidebar-hidden');
+                sidebar.classList.toggle('closed', sidebarIsHidden);
+                menuToggle.setAttribute('aria-expanded', (!sidebarIsHidden).toString());
+                try {
+                    localStorage.setItem('pos_sidebar_mini', sidebarIsHidden ? '1' : '0');
+                } catch(e) {}
+            }
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && window.matchMedia('(max-width: 992px)').matches) {
+                var appWrapper = document.querySelector('.app-wrapper');
+                if (appWrapper.classList.contains('sidebar-open')) {
+                    toggleSidebar();
+                }
+            }
+        });
+
+        // ============================================
+        // USER INFO & ACTIVE MENU
+        // ============================================
+        $(document).ready(function () {
+            // Restore mini sidebar state on desktop
+            if (!window.matchMedia('(max-width: 992px)').matches) {
+                try {
+                    if (localStorage.getItem('pos_sidebar_mini') === '1') {
+                        $('.app-wrapper').addClass('sidebar-hidden');
+                        $('#appSidebar').addClass('closed');
+                        $('#menuToggle').attr('aria-expanded', 'false');
+                    }
+                } catch(e) {}
+            }
+            function getCookie(name) {
+                let ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i].trim();
+                    if (c.indexOf(name + "=") == 0) return c.substring(name.length + 1, c.length);
+                }
+                return "";
+            }
+
+            const nama = getCookie("nama");
+            const role = getCookie("role");
+            userLogin = getCookie("userId");
+
+            if (nama) {
+                $('#displayUserName').text(nama);
+                $('#displayUserRole').text(role || 'Petugas');
+                $('#userAvatar').text((nama || 'U').charAt(0).toUpperCase());
+            }
+
+            // ACTIVE MENU & CONTENT BREADCRUMB SETUP
+            var currentPath = window.location.pathname;
+
+            if (currentPath.toLowerCase().includes('/penugasan/tambahpenugasan')) {
+                currentPath = '/Penugasan/PenugasanPengantaran';
+            }
+            if (currentPath.toLowerCase().includes('/penugasan/detailpenugasan')) {
+                currentPath = '/Penugasan/PenugasanPengantaran';
+            }
+            if (currentPath.toLowerCase().includes('/penugasan/detailoptimasi2')) {
+                currentPath = '/Penugasan/OptimasiPengantaran2';
+            }
+            else if (currentPath.toLowerCase().includes('/penugasan/detailoptimasi')) {
+                currentPath = '/Penugasan/OptimasiPengantaran';
+            }
+            else if (currentPath.toLowerCase().includes('/kiriman/detailkiriman')) {
+                currentPath = '/kiriman';
+            }
+
+            $('#navigation .nav-link').each(function () {
+                var href = $(this).attr('href');
+                if (!href) return;
+
+                const current = currentPath.toLowerCase();
+                const menuHref = href.toLowerCase();
+
+                if (current === menuHref || (current.indexOf(menuHref + "/") === 0 && menuHref !== "/" && menuHref !== "#")) {
+                    $(this).addClass('active');
+                }
+            });
+
+            // Sembunyikan breadcrumb jika di Dashboard (Beranda)
+            var isDashboard = window.location.pathname === '/' || window.location.pathname.toLowerCase() === '/home' || window.location.pathname.toLowerCase() === '/home/index';
+            if (isDashboard) {
+                $('.content-breadcrumb-nav').remove();
+            }
+
+            var activeLink = $('#navigation .nav-link.active');
+            var viewTitle = "@Html.Raw(ViewData["Title"]?.ToString() ?? "Dashboard")".trim();
+            var $bcList = $('#contentBreadcrumbList');
+
+            if (activeLink.length) {
+                var menuText = activeLink.find('span').text().trim();
+                var menuHref = activeLink.attr('href') || '#';
+
+                if (menuText) {
+                    $('#pageTitle').text(menuText);
+
+                    // Build Breadcrumb: Start with Sidebar Menu, No Icons, Trailing /
+                    $bcList.empty();
+                    if (viewTitle && viewTitle.toLowerCase() !== menuText.toLowerCase()) {
+                        $bcList.append('<li class="content-crumb-item"><a href="' + menuHref + '">' + menuText + '</a></li>');
+                        $bcList.append('<li class="content-crumb-sep">/</li>');
+                        $bcList.append('<li class="content-crumb-item active">' + viewTitle + '</li>');
+                        $bcList.append('<li class="content-crumb-sep">/</li>');
+                    } else {
+                        $bcList.append('<li class="content-crumb-item active">' + menuText + '</li>');
+                        $bcList.append('<li class="content-crumb-sep">/</li>');
+                    }
+                }
+            } else if (viewTitle) {
+                $bcList.empty();
+                $bcList.append('<li class="content-crumb-item active">' + viewTitle + '</li>');
+                $bcList.append('<li class="content-crumb-sep">/</li>');
+            }
+        });
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+        function logoutSistem() {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+                document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname + ";";
+            }
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = '/Auth/Login';
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

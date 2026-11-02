@@ -1,0 +1,548 @@
+@{
+    ViewData["Title"] = "Data Proof of Delivery";
+}
+
+<main>
+    <div class="breadcrumb-bar">
+        <a href="/DataMaster"><i class="bi bi-grid-fill"></i> Data Master</a>
+        <span class="sep">/</span>
+        <span class="current">Proof of Delivery</span>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="d-flex justify-content-between align-items-center px-3 pb-3 pt-3 border-bottom flex-wrap gap-2">
+                    <div>
+                        <span class="card-title-section mb-0"><i class="bi bi-receipt-cutoff me-1"></i> Data Proof of Delivery</span>
+                        <div style="font-size:12px;" class="text-muted mt-1">
+                            Total <span id="totalPOD">0</span> data
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-pos px-4" id="btnImportExcel">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Import Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <table id="podTable" class="table table-hover table-bordered w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" width="50">No</th>
+                                <th class="text-center">Nomor Kiriman</th>
+                                <th class="text-center">Nama Penerima</th>
+                                <th class="text-center">Telp Penerima</th>
+                                <th class="text-center">Alamat Penerima</th>
+                                <th class="text-center">Delivery</th>
+                                <th class="text-center">Koordinat</th>
+                                <th class="text-center">Foto</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL IMPORT EXCEL -->
+<div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-excel fs-4" style="color: var(--pos-blue);"></i>
+                    <span>Import Data POD Excel</span>
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4 pt-3">
+                <h6 class="fw-bold mb-3">Upload File Excel</h6>
+
+                <div class="upload-drop-zone rounded-4 p-5 text-center mb-2">
+                    <input type="file" accept=".xlsx" id="fileExcel">
+                    <div class="upload-icon mb-3">
+                        <i class="bi bi-cloud-arrow-up-fill opacity-75" style="font-size: 3.5rem; color: var(--pos-blue);"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-dark">Klik atau drag &amp; drop file di sini</h6>
+                    <p class="text-muted small mb-0">Format: <b>.xlsx</b></p>
+                </div>
+                <div id="fileInfo" class="text-center small text-muted d-none mt-2">
+                    <i class="bi bi-file-earmark-check me-1" style="color: var(--pos-blue);"></i>
+                    <span id="fileName"></span>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <button type="button" class="btn text-secondary fw-medium px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" id="btnPreviewExcel" class="btn btn-pos px-4 fw-semibold d-flex align-items-center gap-2">
+                        <i class="bi bi-eye"></i> Preview Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PREVIEW EXCEL -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true" data-bs-focus="false" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 bg-white rounded-top-4 pb-3 pt-4 px-4">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-table" style="color: var(--pos-blue);"></i> Preview Data POD
+                    </h5>
+                    <p class="mb-0 text-muted small mt-1">Pastikan data berikut sudah sesuai sebelum diimport.</p>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="loadingPreview" class="text-center py-5" style="display:none;">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Membaca file Excel...
+                </div>
+                <div class="table-responsive px-4 pb-3" id="tablePreviewContainer">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="sticky-top table-light">
+                            <tr>
+                                <th class="text-center">No</th>
+                                <th>Nomor Kiriman</th>
+                                <th>Nama Penerima</th>
+                                <th>Telp Penerima</th>
+                                <th>Alamat Penerima</th>
+                                <th>Delivery</th>
+                                <th>Koordinat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBodyPreview"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary fw-medium px-4 rounded-pill" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-pos fw-semibold px-4 rounded-pill d-flex align-items-center gap-2" id="btnSimpanImport">
+                    <i class="bi bi-check-circle-fill"></i> Import Data
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETAIL POD -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-receipt-cutoff fs-4" style="color: var(--pos-blue);"></i>
+                    <span>Detail POD</span>
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4 pt-3">
+                <div class="pod-detail-card">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="pod-detail-label">Nomor Kiriman</div>
+                            <div class="pod-detail-value" id="detailNoKiriman" style="font-size:1.1rem;">-</div>
+                        </div>
+                        <hr class="my-1">
+                        <div class="col-6">
+                            <div class="pod-detail-label">Nama Penerima</div>
+                            <div class="pod-detail-value" id="detailNama">-</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="pod-detail-label">Telepon Penerima</div>
+                            <div class="pod-detail-value" id="detailTelp">-</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="pod-detail-label">Alamat Penerima</div>
+                            <div class="pod-detail-value" id="detailAlamat" style="font-weight:500;font-size:0.9rem;">-</div>
+                        </div>
+                        <hr class="my-1">
+                        <div class="col-6">
+                            <div class="pod-detail-label">Tanggal Delivery</div>
+                            <div class="pod-detail-value" id="detailDelivery">-</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="pod-detail-label">Koordinat</div>
+                            <div class="pod-detail-value" id="detailKoordinat" style="font-size:0.85rem;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary fw-medium px-4 rounded-pill" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ────────────────────────────────────────────────────────────
+    // 1. HELPER: Format Delivery ─────────────────────────────────
+    // ────────────────────────────────────────────────────────────
+    function formatDelivery(deliveryStr) {
+        if (!deliveryStr) return '-';
+        const d = new Date(deliveryStr);
+        if (isNaN(d.getTime())) return deliveryStr;
+        return d.toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // 2. GLOBAL: Menampung data hasil parsing Excel ───────────────
+    // ────────────────────────────────────────────────────────────
+    let importData = [];
+
+    // ────────────────────────────────────────────────────────────
+    // 3. LOAD DATA & INIT DATATABLE ──────────────────────────────
+    // ────────────────────────────────────────────────────────────
+    $(document).ready(function () {
+        // ── Datatable (inisialisasi kosong dulu) ──
+        var table = $('#podTable').DataTable({
+            columns: [
+                { data: null, render: (d, t, r, m) => m.row + 1 },
+                { data: 'nomorKiriman', className: 'fw-bold' },
+                { data: 'namaPenerima' },
+                { data: 'telepon' },
+                {
+                    data: 'alamatPenerima',
+                    render: data => `
+                        <span class="d-inline-block text-truncate" style="max-width:240px;" title="${data || '-'}">
+                            ${data || '-'}
+                        </span>`
+                },
+                {
+                    data: 'waktuPengantaran',
+                    render: data => `
+                        <span class="small">${formatDelivery(data)}</span>`
+                },
+                {
+                    data: 'koordinat',
+                    render: data => `
+                        <span class="small text-muted">${data || '-'}</span>`
+                },
+                {
+                    data: 'fotoBukti',
+                    render: function (data) {
+                        if (!data)
+                            return '<span class="text-muted">-</span>';
+
+                        const url = `https://api.sistemoptimasi.com/api/pod/view/${data}`;
+
+                        return `
+                <a href="${url}" target="_blank">
+                        <span>View</span>
+                </a>
+            `;
+                    }
+                }
+            ],
+            order: [[0, 'asc']],
+            columnDefs: [
+                { targets: [0, 1, 3, 5, 6, 7], className: 'text-center' }
+            ],
+            language: {
+                search: 'Cari:',
+                searchPlaceholder: 'Ketik kata kunci...',
+                lengthMenu: 'Tampilkan _MENU_ data',
+                info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+                infoEmpty: 'Menampilkan 0 data',
+                zeroRecords: 'Tidak ada data yang cocok'
+            },
+            drawCallback: function () {
+                $('#totalPOD').text(this.api().rows({ filter: 'applied' }).count());
+            }
+        });
+
+        // ── LOAD DATA DARI API ──
+        function loadPOD() {
+            $.get(API_BASE_URL + '/api/pod/get-all')
+                .done(function (res) {
+                    let data = res.data || [];
+                    if (Array.isArray(data)) {
+                        table.clear();
+                        table.rows.add(data);
+                        table.draw();
+                        table.columns.adjust();
+                    } else {
+                        console.warn('Format data bukan Array!', data);
+                        table.clear().draw();
+                    }
+                })
+                .fail(function (err) {
+                    console.error('Gagal load data POD', err);
+                    alert('Gagal mengambil data dari server.');
+                });
+        }
+        loadPOD();
+
+        // ── IMPORT EXCEL ──
+        $('#btnImportExcel').click(function () {
+            $('#fileExcel').val('');
+            $('#fileInfo').addClass('d-none');
+            new bootstrap.Modal(document.getElementById('importExcelModal')).show();
+        });
+
+        // ── FILE INPUT ──
+        $('#fileExcel').change(function () {
+            const file = this.files[0];
+            if (file) {
+                $('#fileInfo').removeClass('d-none');
+                $('#fileName').text(`${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+            } else {
+                $('#fileInfo').addClass('d-none');
+            }
+        });
+
+        // ── DRAG & DROP ──
+        $('.upload-drop-zone').on('dragover', function (e) {
+            e.preventDefault();
+            $(this).addClass('dragover');
+        }).on('dragleave', function (e) {
+            $(this).removeClass('dragover');
+        }).on('drop', function (e) {
+            e.preventDefault();
+            $(this).removeClass('dragover');
+            const files = e.originalEvent.dataTransfer.files;
+            if (files.length) {
+                $('#fileExcel')[0].files = files;
+                $('#fileExcel').trigger('change');
+            }
+        });
+
+        // ── PREVIEW EXCEL (Dinamis dengan SheetJS) ──
+        $('#btnPreviewExcel').click(function () {
+            const fileInput = $('#fileExcel')[0];
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Harap pilih file Excel terlebih dahulu!');
+                return;
+            }
+
+            const importModal = bootstrap.Modal.getInstance(document.getElementById('importExcelModal'));
+            importModal.hide();
+
+            const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+            previewModal.show();
+
+            $('#tablePreviewContainer').hide();
+            $('#loadingPreview').show();
+            $('#tableBodyPreview').html('');
+
+            // Baca file Excel pakai FileReader
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                    if (!json || json.length === 0) {
+                        $('#loadingPreview').hide();
+                        alert('File Excel kosong.');
+                        return;
+                    }
+
+                    // Ambil baris pertama sebagai header untuk mapping
+                    const headerRow = json[0];
+                    let colIndex = {};
+                    headerRow.forEach((h, i) => {
+                        const key = ('' + h).trim().toLowerCase();
+                        colIndex[key] = i;
+                    });
+
+                    // Mapping berdasarkan header (case-insensitive)
+                    const mapCol = (key) => colIndex[key] !== undefined ? colIndex[key] : -1;
+                    const iNoKiriman = mapCol('nomor kiriman');
+                    const iNama = mapCol('nama penerima');
+                    const iTelp = mapCol('telp penerima') !== -1 ? mapCol('telp penerima') : mapCol('telepon penerima');
+                    const iAlamat = mapCol('alamat penerima');
+                    const iDelivery = mapCol('delivery');
+                    const iKoordinat = mapCol('koordinat');
+
+                    let rowsHtml = '';
+                    let count = 0;
+
+                    // Mulai dari baris kedua (indeks 1) karena baris 1 adalah header
+                    for (let r = 1; r < json.length; r++) {
+                        const row = json[r];
+                        if (!row || row.length === 0) continue;
+
+                        // Lewati baris yang benar-benar kosong
+                        const hasData = row.some(cell => cell !== undefined && cell !== null && cell !== '');
+                        if (!hasData) continue;
+
+                        count++;
+                        const noKiriman = row[iNoKiriman] || '-';
+                        const nama = row[iNama] || '-';
+                        const telp = (iTelp !== -1 ? row[iTelp] : '') || '-';
+                        const alamat = (iAlamat !== -1 ? row[iAlamat] : '') || '-';
+                        const delivery = (iDelivery !== -1 ? row[iDelivery] : '') || '-';
+                        const koordinat = (iKoordinat !== -1 ? row[iKoordinat] : '') || '-';
+
+                        // Format delivery jika berupa angka serial date Excel (> 40000 = tgl >= 2009)
+                        let deliveryDisplay = delivery;
+                        if (typeof delivery === 'number' && delivery > 40000) {
+                            const parsed = XLSX.SSF.parse_date_code(delivery);
+                            if (parsed) {
+                                const pad = n => String(n).padStart(2, '0');
+                                deliveryDisplay = `${parsed.y}-${pad(parsed.m)}-${pad(parsed.d)} ${pad(parsed.H)}:${pad(parsed.M)}:${pad(parsed.S)}`;
+                            }
+                        }
+
+                        rowsHtml += `
+                            <tr>
+                                <td class="text-center text-muted">${count}</td>
+                                <td class="fw-bold">${noKiriman}</td>
+                                <td>${nama}</td>
+                                <td>${telp}</td>
+                                <td>
+                                    <span class="d-inline-block text-truncate" style="max-width:200px;" title="${alamat}">${alamat}</span>
+                                </td>
+                                <td class="text-center"><span class="small">${deliveryDisplay}</span></td>
+                                <td><span class="small text-muted">${koordinat}</span></td>
+                            </tr>`;
+                    }
+
+                    $('#tableBodyPreview').html(rowsHtml);
+                    $('#loadingPreview').hide();
+                    $('#tablePreviewContainer').show();
+
+                    if (count === 0) {
+                        alert('Tidak ada data yang ditemukan di file.');
+                        return;
+                    }
+
+                    // ── Simpan hasil parsing ke global variable ──
+                    importData = [];
+                    for (let r = 1; r < json.length; r++) {
+                        const row = json[r];
+                        if (!row || row.length === 0) continue;
+                        const hasData = row.some(cell => cell !== undefined && cell !== null && cell !== '');
+                        if (!hasData) continue;
+
+                        const noKiriman = row[iNoKiriman] || '';
+                        const nama = row[iNama] || '';
+                        const telp = (iTelp !== -1 ? row[iTelp] : '') || '';
+                        const alamat = (iAlamat !== -1 ? row[iAlamat] : '') || '';
+                        const deliveryRaw = (iDelivery !== -1 ? row[iDelivery] : '') || null;
+                        const koordinat = (iKoordinat !== -1 ? row[iKoordinat] : '') || '';
+
+                        // Handle serial date Excel
+                        let waktuPengantaran = deliveryRaw;
+                        if (typeof deliveryRaw === 'number' && deliveryRaw > 40000) {
+                            const parsed = XLSX.SSF.parse_date_code(deliveryRaw);
+                            if (parsed) {
+                                const pad = n => String(n).padStart(2, '0');
+                                waktuPengantaran = `${parsed.y}-${pad(parsed.m)}-${pad(parsed.d)}T${pad(parsed.H)}:${pad(parsed.M)}:${pad(parsed.S)}`;
+                            }
+                        } else if (typeof deliveryRaw === 'string' && deliveryRaw.trim()) {
+                            // Coba parse string datetime
+                            const dt = new Date(deliveryRaw);
+                            if (!isNaN(dt.getTime())) {
+                                waktuPengantaran = dt.toISOString();
+                            }
+                        }
+
+                        // Parse koordinat -> latitude & longitude
+                        let latitude = null;
+                        let longitude = null;
+                        if (koordinat) {
+                            const parts = koordinat.split(',').map(s => parseFloat(s.trim()));
+                            if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                                latitude = parts[0];
+                                longitude = parts[1];
+                            }
+                        }
+
+                        importData.push({
+                            nomorKiriman: noKiriman || null,
+                            namaPenerima: nama || null,
+                            telepon: telp || null,
+                            alamatPenerima: alamat || null,
+                            waktuPengantaran: waktuPengantaran,
+                            koordinat: koordinat || null,
+                            latitude: latitude,
+                            longitude: longitude,
+                            kirimanId: null,
+                            fotoBukti: null
+                        });
+                    }
+
+                } catch (err) {
+                    console.error('Gagal baca Excel:', err);
+                    $('#loadingPreview').hide();
+                    alert('Gagal membaca file Excel. Pastikan format file benar.');
+                }
+            };
+            reader.onerror = function () {
+                $('#loadingPreview').hide();
+                alert('Gagal membaca file.');
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // ── SIMPAN IMPORT ──
+        $('#btnSimpanImport').click(function () {
+            if (!importData || importData.length === 0) {
+                alert('Tidak ada data untuk diimport.');
+                return;
+            }
+
+            // Ambil userLogin dari global (set di _Layout.cshtml dari cookie)
+            const createdBy = window.userLogin ? parseInt(window.userLogin) : null;
+
+            // Mapping data + tambah field default
+            const payload = importData.map(item => ({
+                nomorKiriman: item.nomorKiriman,
+                namaPenerima: item.namaPenerima,
+                telepon: item.telepon,
+                alamatPenerima: item.alamatPenerima,
+                waktuPengantaran: item.waktuPengantaran,
+                koordinat: item.koordinat,
+                latitude: item.latitude,
+                longitude: item.longitude,
+                kirimanId: null,
+                fotoBukti: null,
+                createdBy: createdBy
+            }));
+
+            const btn = $(this);
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Mengimport...');
+
+            $.ajax({
+                url: API_BASE_URL + '/api/pod/tambahdatapod',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function (res) {
+                    btn.prop('disabled', false).html('<i class="bi bi-check-circle-fill"></i> Import Data');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+                    modal.hide();
+                    alert('Data POD berhasil diimport.');
+                    loadPOD();
+                },
+                error: function (err) {
+                    btn.prop('disabled', false).html('<i class="bi bi-check-circle-fill"></i> Import Data');
+                    console.error('Gagal import:', err);
+                    alert('Gagal mengimport data. ' + (err.responseJSON?.message || err.statusText));
+                }
+            });
+        });
+
+        // ── RESET FILE INPUT ──
+        $('#importExcelModal').on('hidden.bs.modal', function () {
+            $('#fileExcel').val('');
+            $('#fileInfo').addClass('d-none');
+        });
+    });
+</script>
